@@ -28,9 +28,7 @@ const registry: RegistryEntry[] = [
 
 export const ARCHITECTURES: Architecture[] = registry.map((e) => e.arch);
 
-export const WIP_ARCH_IDS = new Set(
-  registry.filter((e) => e.wip).map((e) => e.arch.id),
-);
+export const WIP_ARCH_IDS = new Set(registry.filter((e) => e.wip).map((e) => e.arch.id));
 
 export function getArchitectureById(id: string): Architecture | undefined {
   return ARCHITECTURES.find((a) => a.id === id);
