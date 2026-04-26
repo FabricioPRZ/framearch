@@ -667,7 +667,7 @@ export type { ${Feat}User, LoginCredentials, RegisterPayload } from "./types/${f
 
 // ── Generic fallback ─────────────────────────────────────────────────────────
 
-function genericTemplates(feat: string, Feat: string, base: string, ext: string): FileTemplate[] {
+function genericTemplates(feat: string, Feat: string, base: string, _ext: string): FileTemplate[] { 
   return [
     {
       path: `${base}/types/${feat}.types.ts`,
