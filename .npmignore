@@ -1,0 +1,23 @@
+# Source — only dist/ ships
+src/
+tests/
+coverage/
+
+# Config
+tsconfig.json
+tsup.config.ts
+vitest.config.ts
+eslint.config.js
+.prettierrc
+.eslintignore
+
+# GitHub
+.github/
+
+# Dev docs
+CONTRIBUTING.md
+CHANGELOG.md
+
+# Misc
+*.log
+.env*
