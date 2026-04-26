@@ -11,21 +11,21 @@ Thank you for wanting to contribute! This guide explains everything you need to 
 3. [Adding a new architecture](#adding-a-new-architecture)
 4. [Adding a new framework](#adding-a-new-framework)
 5. [Running tests](#running-tests)
-6. [Commit conventions](#commit-conventions)
-7. [Releasing a new version](#releasing-a-new-version)
-8. [Code style](#code-style)
+6. [Code style](#code-style)
+7. [Commit conventions](#commit-conventions)
+8. [Releasing a new version](#releasing-a-new-version)
 
 ---
 
 ## Setup
 
-You need **Node 18+** and **pnpm**.
+You need **Node 18+** and **npm**.
 
 ```bash
-git clone https://github.com/FabricioPRZ/framearch
+git clone https://github.com/TU_ORG/framearch.git
 cd framearch
-pnpm install
-pnpm build
+npm install
+npm run build
 ```
 
 To test the CLI locally:
@@ -56,14 +56,16 @@ framearch/
 │   └── architectures.test.ts
 └── .github/
     ├── workflows/
-    │   ├── ci.yml                   # Runs on every PR
-    │   └── publish.yml              # Runs on every v* tag push
+    │   ├── ci.yml                   # Runs on every PR (Node 18, 20, 22)
+    │   └── publish.yml              # Runs on every v* tag push → publishes to npm
     └── ISSUE_TEMPLATE/
 ```
 
 ---
 
 ## Adding a new architecture
+
+This is the main way to contribute to framearch. When a user picks your architecture, they receive real, working code — not placeholders. Write the templates as you would write the actual feature.
 
 ### 1 — Create the folder and implement `generate()`
 
@@ -72,26 +74,33 @@ mkdir src/architectures/my-arch
 touch src/architectures/my-arch/index.ts
 ```
 
-Your file must export an object implementing [`Architecture`](src/types.ts):
+Your file must export an object implementing the [`Architecture`](src/types.ts) interface:
 
 ```ts
 import type { Architecture, FileTemplate, GenerateContext } from "../../types.js";
 
 function generate(ctx: GenerateContext): FileTemplate[] {
-  const { featureName, framework, outputDir } = ctx;
-  // Return an array of { path, content } objects.
-  // path is relative to outputDir.
-  // Branch on framework.id for per-framework content.
-  return [
-    {
-      path: `src/my-convention/${featureName}/index.ts`,
-      content: `// ${featureName} feature\n`,
-    },
-  ];
+  const { featureName, framework } = ctx;
+  const feat = featureName;          // e.g. "auth"
+  const Feat = feat.charAt(0).toUpperCase() + feat.slice(1); // "Auth"
+  const base = `src/my-convention/${feat}`;
+
+  // Branch on framework.id to return framework-specific content
+  if (framework.id === "react") {
+    return [
+      {
+        path: `${base}/MyFile.tsx`,
+        content: `// real code here — this is what the user will receive\n`,
+      },
+    ];
+  }
+
+  // handle vue, svelte, angular...
+  return [];
 }
 
 export const myArchitecture: Architecture = {
-  id: "my-arch",             // unique kebab-case identifier
+  id: "my-arch",            // unique kebab-case identifier
   name: "My Architecture",
   description: "One sentence explanation",
   folderConvention: "src/{...}/<feature>/",
@@ -99,11 +108,30 @@ export const myArchitecture: Architecture = {
 };
 ```
 
-> 📌 See `src/architectures/screaming/index.ts` for a complete reference — it covers React, Vue, Svelte and Angular.
+> 📌 See `src/architectures/screaming/index.ts` for a complete reference. It covers React, Vue, Svelte, and Angular with real, working auth code for each.
+
+**Important:** if your `generate()` receives a framework you haven't implemented yet, throw a clear error rather than returning empty files:
+
+```ts
+throw new Error(
+  `My Architecture does not support ${framework.name} yet. ` +
+  "See CONTRIBUTING.md to add support."
+);
+```
+
+If a parameter is intentionally unused, prefix it with `_` to satisfy the TypeScript strict config:
+
+```ts
+// ✅ correct
+function genericTemplates(feat: string, Feat: string, base: string, _ext: string): FileTemplate[] {
+
+// ❌ will fail typecheck
+function genericTemplates(feat: string, Feat: string, base: string, ext: string): FileTemplate[] {
+```
 
 ### 2 — Register it
 
-Open `src/architectures/index.ts` and add:
+Open `src/architectures/index.ts` and add your architecture:
 
 ```ts
 import { myArchitecture } from "./my-arch/index.js";
@@ -114,6 +142,8 @@ const registry: RegistryEntry[] = [
   { arch: myArchitecture, wip: true }, // remove wip: true when all frameworks are covered
 ];
 ```
+
+The `wip: true` flag shows a warning in the CLI and prevents generation. Remove it only when all supported frameworks have working templates.
 
 ### 3 — Add tests
 
@@ -129,15 +159,34 @@ describe("myArchitecture", () => {
       framework: FRAMEWORKS.find((f) => f.id === "react")!,
       outputDir: "/tmp/test",
     });
+
     expect(templates.length).toBeGreaterThan(0);
-    // add more specific assertions
+
+    for (const t of templates) {
+      expect(typeof t.path).toBe("string");
+      expect(t.path.length).toBeGreaterThan(0);
+      expect(typeof t.content).toBe("string");
+      expect(t.content.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("index.ts contains an export", () => {
+    const templates = myArchitecture.generate({
+      featureName: "auth",
+      framework: FRAMEWORKS.find((f) => f.id === "react")!,
+      outputDir: "/tmp/test",
+    });
+
+    const index = templates.find((t) => t.path.endsWith("index.ts"));
+    expect(index).toBeDefined();
+    expect(index!.content).toContain("export");
   });
 });
 ```
 
 ### 4 — Update the README
 
-Add your architecture to the **Architectures** table in `README.md`.
+Add your architecture to the **Supported architectures** table in `README.md`.
 
 ---
 
@@ -160,26 +209,61 @@ Open `src/frameworks/index.ts` and append:
 
 ### 2 — Add templates to every stable architecture
 
-For each architecture where `wip` is **not** set (currently `screaming`), open its `index.ts` and add a case for your framework id inside the `builders` map (or equivalent).
+For each architecture where `wip` is **not** set (currently `screaming`), open its `index.ts` and add a case for your framework id inside the `builders` map or equivalent branching logic.
 
 ### 3 — Update the README
 
-Add your framework to the **Frameworks** table in `README.md`.
+Add your framework to the **Supported frameworks** table in `README.md`.
 
 ---
 
 ## Running tests
 
 ```bash
-pnpm test              # run all tests once
-pnpm test:watch        # watch mode
-pnpm test:coverage     # with coverage report
-pnpm typecheck         # TypeScript only
-pnpm lint              # ESLint
-pnpm format:check      # Prettier
+npm test                  # run all tests once
+npm run test:watch        # watch mode
+npm run test:coverage     # with coverage report
+npm run typecheck         # TypeScript only
+npm run lint              # ESLint
+npm run format:check      # Prettier check
+npx prettier --write "src/**/*.ts" "tests/**/*.ts"  # auto-fix formatting
 ```
 
-Coverage thresholds are enforced — PRs that drop below the minimums will fail CI.
+### Coverage
+
+Coverage is measured with `vitest --coverage`. The following files are excluded because they have no executable logic or are covered by manual/e2e testing:
+
+| File | Reason excluded |
+|------|----------------|
+| `src/types.ts` | Only TypeScript interfaces, no runtime code |
+| `src/cli.ts` | Interactive prompts — tested manually or via e2e |
+| `src/index.ts` | Single-line entry point that calls `runCli()` |
+
+Current thresholds:
+
+| Metric | Threshold |
+|--------|-----------|
+| Lines | 80% |
+| Statements | 80% |
+| Branches | 85% |
+| Functions | 75% |
+
+PRs that drop below these thresholds will fail CI.
+
+### Lint rules
+
+- `no-console` is **off** globally — the CLI is a console application.
+- `@typescript-eslint/no-unused-vars` is set to `error`. Prefix intentionally unused parameters with `_` (e.g. `_ext`).
+- `@typescript-eslint/no-explicit-any` is set to `error` — avoid `any`.
+
+---
+
+## Code style
+
+- **TypeScript strict mode** — no `any`, no implicit returns.
+- **ESM only** — always use `.js` extension in imports even for `.ts` files (TypeScript resolves them at build time).
+- **Pure `generate()` functions** — no I/O, no side effects. Return `FileTemplate[]` only.
+- Run `npx prettier --write "src/**/*.ts" "tests/**/*.ts"` before committing to avoid format check failures in CI.
 
 ---
 
@@ -193,44 +277,40 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 | `fix:` | Bug fix |
 | `docs:` | README, CONTRIBUTING, comments |
 | `test:` | Adding or fixing tests |
+| `style:` | Formatting only (prettier, whitespace) |
 | `refactor:` | Internal restructuring without behaviour change |
 | `chore:` | Tooling, deps, CI |
 
 Examples:
+
 ```
-feat(arch): add Feature-Sliced Design architecture
-fix(screaming): correct Vue composable export path
-docs: update contributing guide for framework additions
+feat(arch): add MVC architecture with React and Vue templates
+fix(screaming): prefix unused _ext parameter to satisfy strict TS
+style: apply prettier formatting to screaming index
+test: exclude cli.ts from coverage, adjust thresholds
 ```
 
 ---
 
 ## Releasing a new version
 
-Only maintainers release. Steps:
+Maintainers only:
 
 ```bash
-# 1. Update version in package.json
-pnpm version patch   # or minor / major
+# 1. Bump version in package.json
+npm version patch   # or minor / major
 
 # 2. Update CHANGELOG.md
 
-# 3. Push the tag — publish.yml does the rest
+# 3. Push — publish.yml handles the rest
 git push --follow-tags
 ```
 
 The `publish.yml` workflow will:
-- Run all checks
-- Publish to npm with provenance
+- Run all checks (typecheck, test, build)
+- Publish to npm with provenance (`NPM_TOKEN` secret required)
 - Create a GitHub Release with auto-generated notes
 
 ---
-
-## Code style
-
-- **TypeScript strict mode** — no `any`, no implicit returns
-- **ESM only** — always use `.js` extension in imports (TypeScript resolves them)
-- **Pure `generate()` functions** — no I/O, no side effects; everything is a `FileTemplate[]`
-- Run `pnpm format` before committing
 
 If you have questions, open a Discussion or ping the team in the relevant issue. 🙌
