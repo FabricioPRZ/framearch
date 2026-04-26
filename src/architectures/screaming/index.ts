@@ -17,10 +17,9 @@ import type { Architecture, FileTemplate, GenerateContext } from "../../types.js
 
 function generate(ctx: GenerateContext): FileTemplate[] {
   const { featureName, framework } = ctx;
-  const feat = featureName; // e.g. "auth"
-  const Feat = feat.charAt(0).toUpperCase() + feat.slice(1); // "Auth"
+  const feat = featureName;
+  const Feat = feat.charAt(0).toUpperCase() + feat.slice(1);
   const base = `src/features/${feat}`;
-  const ext = framework.fileExtension;
 
   // Each framework gets its own template builder
   const builders: Record<string, () => FileTemplate[]> = {
@@ -32,8 +31,7 @@ function generate(ctx: GenerateContext): FileTemplate[] {
 
   const builder = builders[framework.id];
   if (!builder) {
-    // Fallback: generic TS templates
-    return genericTemplates(feat, Feat, base, ext);
+    return genericTemplates(feat, Feat, base, framework.fileExtension);
   }
 
   return builder();
