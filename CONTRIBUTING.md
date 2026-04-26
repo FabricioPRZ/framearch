@@ -22,7 +22,7 @@ Thank you for wanting to contribute! This guide explains everything you need to 
 You need **Node 18+** and **npm**.
 
 ```bash
-git clone https://github.com/TU_ORG/framearch.git
+git clone https://github.com/FabricioPRZ/framearch.git
 cd framearch
 npm install
 npm run build
