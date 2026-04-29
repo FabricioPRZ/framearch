@@ -53,7 +53,7 @@ Then framearch generates a complete, typed, ready-to-wire feature folder.
 |----|------|--------|------------------|
 | `screaming` | Screaming Architecture | ✅ Stable | `src/features/<feat>/{components, hooks, services, types}` |
 | `mvc` | MVC | 🚧 WIP | `src/{models, views, controllers}/<feat>/` |
-| `mvvm` | MVVM | 🚧 WIP | `src/{models, viewModels, views}/<feat>/` |
+| `mvvm` | MVVM | 🚧 WIP (React only) | `src/features/<feat>/{models, services, viewModels, views}/` |
 
 ---
 

@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { ARCHITECTURES, WIP_ARCH_IDS } from "../src/architectures/index.js";
 import { FRAMEWORKS } from "../src/frameworks/index.js";
 import { screamingArchitecture } from "../src/architectures/screaming/index.js";
+import { mvvmArchitecture } from "../src/architectures/mvvm/index.js";
 
 describe("architecture registry", () => {
   it("each architecture has required fields", () => {
@@ -76,15 +77,64 @@ describe("screamingArchitecture — all frameworks", () => {
   }
 });
 
+describe("mvvmArchitecture — React", () => {
+  it("generates valid templates for React", () => {
+    const reactFramework = FRAMEWORKS.find((f) => f.id === "react")!;
+    const templates = mvvmArchitecture.generate({
+      featureName: "auth",
+      framework: reactFramework,
+      outputDir: "/tmp/test",
+    });
+
+    expect(templates.length).toBeGreaterThan(0);
+
+    for (const t of templates) {
+      expect(typeof t.path).toBe("string");
+      expect(t.path.length).toBeGreaterThan(0);
+      expect(typeof t.content).toBe("string");
+      expect(t.content.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("index.ts contains an export", () => {
+    const reactFramework = FRAMEWORKS.find((f) => f.id === "react")!;
+    const templates = mvvmArchitecture.generate({
+      featureName: "auth",
+      framework: reactFramework,
+      outputDir: "/tmp/test",
+    });
+
+    const index = templates.find((t) => t.path.endsWith("index.ts"));
+    expect(index).toBeDefined();
+    expect(index!.content).toContain("export");
+  });
+
+  it("throws for unsupported frameworks", () => {
+    const vueFramework = FRAMEWORKS.find((f) => f.id === "vue")!;
+    expect(() =>
+      mvvmArchitecture.generate({
+        featureName: "auth",
+        framework: vueFramework,
+        outputDir: "/tmp/test",
+      }),
+    ).toThrow();
+  });
+});
+
 describe("WIP architectures", () => {
-  it("throw when generate() is called", () => {
+  it("throw when generate() is called with unsupported framework", () => {
     const wipArchs = ARCHITECTURES.filter((a) => WIP_ARCH_IDS.has(a.id));
 
     for (const arch of wipArchs) {
+      // Use Vue for MVC (no frameworks implemented) and React for others
+      const testFramework = arch.id === "mvc" 
+        ? FRAMEWORKS.find((f) => f.id === "vue")!
+        : FRAMEWORKS.find((f) => f.id === "vue")!;
+      
       expect(() =>
         arch.generate({
           featureName: "auth",
-          framework: FRAMEWORKS[0]!,
+          framework: testFramework,
           outputDir: "/tmp/test",
         }),
       ).toThrow();
