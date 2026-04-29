@@ -13,7 +13,8 @@ Thank you for wanting to contribute! This guide explains everything you need to 
 5. [Running tests](#running-tests)
 6. [Code style](#code-style)
 7. [Commit conventions](#commit-conventions)
-8. [Releasing a new version](#releasing-a-new-version)
+8. ⁠⁠[Branch conventions](#branch-conventions)
+9. [Releasing a new version](#releasing-a-new-version)
 
 ---
 
@@ -291,6 +292,16 @@ test: exclude cli.ts from coverage, adjust thresholds
 ```
 
 ---
+
+## Branch conventions
+Use: `[type]/[issue]-[description]`  
+
+Examples:  
+- `feat/55-user-registration`  
+- `fix/89-mobile-responsive-header`  
+
+Alllowed types:  
+`feat`, `fix`, `docs`, `refactor`, `test`, `chore`.
 
 ## Releasing a new version
 
