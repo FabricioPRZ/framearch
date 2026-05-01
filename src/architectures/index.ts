@@ -22,7 +22,7 @@ interface RegistryEntry {
 const registry: RegistryEntry[] = [
   { arch: screamingArchitecture },
   { arch: mvcArchitecture, wip: true },
-  { arch: mvvmArchitecture, wip: true },
+  { arch: mvvmArchitecture },
   // ── Add new architectures above this line ──
 ];
 
