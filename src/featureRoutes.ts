@@ -29,7 +29,7 @@ export async function injectReactFeatureRoutes(
 
   content = content.replace(
     /(\s*){\/\* Feature routes will be added here \*\/}/,
-    (match, indent: string) => {
+    (_, indent: string) => {
       const indentedRoutes = config.routes
         .map((r) => `${indent}<Route path="${r.path}" element={<${r.componentName} />} />`)
         .join("\n");
