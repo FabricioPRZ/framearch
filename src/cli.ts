@@ -26,6 +26,7 @@ function printBanner(): void {
 
 function printSummary(answers: CliAnswers): void {
   const { featureName, framework, architecture, outputDir } = answers;
+
   console.log(`
 ${chalk.bold("Summary")}
   ${chalk.dim("Feature:")}      ${featureName}
@@ -38,22 +39,23 @@ ${chalk.bold("Summary")}
 export async function runCli(): Promise<void> {
   printBanner();
 
-  // 1 ── Output directory first (so we can detect existing project)
   const outputDir = await input({
     message: "Output directory:",
     default: ".",
-    validate: (v) => (v.trim() ? true : "Output directory cannot be empty."),
+    validate: (v) =>
+      v.trim() ? true : "Output directory cannot be empty.",
   });
 
-  // 2 ── Detect existing project
   const detected = await detectExistingProject(outputDir);
 
-  let framework: typeof FRAMEWORKS[number];
+  let framework: (typeof FRAMEWORKS)[number];
 
   if (detected) {
     console.log(
       chalk.green(
-        `\n✓ Detected ${detected.framework.name} project (${detected.buildTool})${detected.hasTypeScript ? " + TypeScript" : ""}\n`,
+        `\n✓ Detected ${detected.framework.name} project (${
+          detected.buildTool
+        })${detected.hasTypeScript ? " + TypeScript" : ""}\n`,
       ),
     );
 
@@ -68,7 +70,6 @@ export async function runCli(): Promise<void> {
       framework = await askForFramework();
     }
   } else {
-    // No existing project — ask if they want to scaffold one
     const scaffold = await confirm({
       message: "No existing project found. Scaffold a new project?",
       default: true,
@@ -81,7 +82,14 @@ export async function runCli(): Promise<void> {
         message: "Build tool:",
         choices: [
           { name: "Vite  Fast HMR, lightweight", value: "vite" },
-          ...(framework.id === "react" ? [{ name: "Next.js  Full-stack React framework", value: "nextjs" }] : []),
+          ...(framework.id === "react"
+            ? [
+                {
+                  name: "Next.js  Full-stack React framework",
+                  value: "nextjs",
+                },
+              ]
+            : []),
         ],
       });
 
@@ -91,6 +99,7 @@ export async function runCli(): Promise<void> {
       });
 
       const scaffoldSpinner = ora("Scaffolding project…").start();
+
       try {
         const result = await scaffoldProject({
           outputDir,
@@ -98,7 +107,9 @@ export async function runCli(): Promise<void> {
           buildTool: buildTool as "vite" | "nextjs",
           typescript,
         });
+
         scaffoldSpinner.succeed(chalk.green("Project scaffolded!"));
+
         console.log(`\n${chalk.bold("Created project files:")}`);
         for (const f of result.files) {
           const rel = path.relative(process.cwd(), f);
@@ -106,7 +117,11 @@ export async function runCli(): Promise<void> {
         }
 
         const installSpinner = ora("Installing dependencies…").start();
-        await execAsync("npm install", { cwd: path.resolve(outputDir) });
+
+        await execAsync("npm install", {
+          cwd: path.resolve(outputDir),
+        });
+
         installSpinner.succeed(chalk.green("Dependencies installed!"));
       } catch (err) {
         scaffoldSpinner.fail(chalk.red("Scaffold failed"));
@@ -117,32 +132,36 @@ export async function runCli(): Promise<void> {
     }
   }
 
-  // 3 ── Feature name
   const featureName = await input({
     message: "Feature name:",
     default: "auth",
     validate: (v) => {
       if (!v.trim()) return "Feature name cannot be empty.";
-      if (!/^[a-z][a-z0-9-]*$/.test(v.trim()))
+      if (!/^[a-z][a-z0-9-]*$/.test(v.trim())) {
         return "Use lowercase letters, numbers, and hyphens only (e.g. auth, user-profile).";
+      }
       return true;
     },
     transformer: (v) => v.toLowerCase().trim(),
   });
 
-  // 4 ── Architecture
   const architectureId = await select({
     message: "Architecture:",
     choices: ARCHITECTURES.map((a) => {
       const wip = WIP_ARCH_IDS.has(a.id);
+
       return {
-        name: `${a.name}  ${wip ? chalk.yellow("[WIP] ") : ""}${chalk.dim(a.description)}`,
+        name: `${a.name}  ${
+          wip ? chalk.yellow("[WIP] ") : ""
+        }${chalk.dim(a.description)}`,
         value: a.id,
       };
     }),
   });
 
-  const architecture = ARCHITECTURES.find((a) => a.id === architectureId)!;
+  const architecture = ARCHITECTURES.find(
+    (a) => a.id === architectureId,
+  )!;
 
   if (WIP_ARCH_IDS.has(architectureId)) {
     console.log(
@@ -153,40 +172,63 @@ export async function runCli(): Promise<void> {
     process.exit(1);
   }
 
-  const answers: CliAnswers = { featureName, framework, architecture, outputDir };
+  const answers: CliAnswers = {
+    featureName,
+    framework,
+    architecture,
+    outputDir,
+  };
 
-  // 5 ── Dry-run preview
   const dryRun = await confirm({
     message: "Preview files without writing? (dry-run)",
     default: false,
   });
 
   if (dryRun) {
-    const templates = previewGenerator({ featureName, framework, architecture, outputDir });
+    const templates = previewGenerator({
+      featureName,
+      framework,
+      architecture,
+      outputDir,
+    });
+
     console.log(`\n${chalk.bold("Files that would be created:")}`);
+
     for (const t of templates) {
       console.log(`  ${chalk.green("+")} ${t.path}`);
     }
+
     console.log();
     return;
   }
 
   printSummary(answers);
 
-  const ok = await confirm({ message: "Generate files?", default: true });
+  const ok = await confirm({
+    message: "Generate files?",
+    default: true,
+  });
+
   if (!ok) {
     console.log(chalk.dim("Aborted."));
     return;
   }
 
-  // 6 ── Generate
   const spinner = ora("Generating files…").start();
-  try {
-    const result = await runGenerator({ featureName, framework, architecture, outputDir });
 
-    // Inject feature routes into React Router
+  try {
+    const result = await runGenerator({
+      featureName,
+      framework,
+      architecture,
+      outputDir,
+    });
+
     if (framework.id === "react" && architecture.id === "mvvm") {
-      const Feat = featureName.charAt(0).toUpperCase() + featureName.slice(1);
+      const Feat =
+        featureName.charAt(0).toUpperCase() +
+        featureName.slice(1);
+
       await injectReactFeatureRoutes(outputDir, {
         featureName,
         routes: [
@@ -207,6 +249,7 @@ export async function runCli(): Promise<void> {
     spinner.succeed(chalk.green("Done!"));
 
     console.log(`\n${chalk.bold("Created:")}`);
+
     for (const f of result.files) {
       const rel = path.relative(process.cwd(), f);
       console.log(`  ${chalk.green("+")} ${rel}`);
@@ -221,13 +264,18 @@ ${chalk.bold("Next steps:")}
 `);
   } catch (err) {
     spinner.fail(chalk.red("Generation failed"));
-    const message = err instanceof Error ? err.message : String(err);
+
+    const message =
+      err instanceof Error ? err.message : String(err);
+
     console.error(chalk.red(message));
     process.exit(1);
   }
 }
 
-async function askForFramework(): Promise<typeof FRAMEWORKS[number]> {
+async function askForFramework(): Promise<
+  (typeof FRAMEWORKS)[number]
+> {
   const frameworkId = await select({
     message: "Framework:",
     choices: FRAMEWORKS.map((f) => ({
