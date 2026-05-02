@@ -273,44 +273,23 @@ export function Router(): JSX.Element {
   return `// Navigation for ${framework.name}\n`;
 }
 
-function generateNetworkClient(): string {
+function generateNetworkClient(_framework: Framework): string {
   return `export const http = {
   get: async () => {},
 };`;
 }
 
-function generateGitignore(): string {
+function generateGitignore(
+  _framework: Framework,
+  buildTool: string,
+): string {
   return `node_modules
-dist
+${buildTool === "nextjs" ? ".next" : "dist"}
 .env
 `;
 }
 
-function generateMainEntry(framework: Framework): string {
-  if (framework.id === "react") {
-    return `import React from "react";
-import ReactDOM from "react-dom/client";
-import App from "./App";
-
-ReactDOM.createRoot(document.getElementById("root")!).render(<App />);
-`;
-  }
-  return ``;
-}
-
-function generateAppComponent(framework: Framework): string {
-  if (framework.id === "react") {
-    return `function App() {
-  return <h1>Hello</h1>;
-}
-
-export default App;
-`;
-  }
-  return ``;
-}
-
-function generateTsConfig(): string {
+function generateTsConfig(_framework: Framework): string {
   return JSON.stringify(
     {
       compilerOptions: {
@@ -322,14 +301,17 @@ function generateTsConfig(): string {
   );
 }
 
-function generateViteConfig(): string {
+function generateViteConfig(
+  _framework: Framework,
+  _typescript: boolean,
+): string {
   return `import { defineConfig } from "vite";
 
 export default defineConfig({});
 `;
 }
 
-function generateIndexHtml(): string {
+function generateIndexHtml(_framework: Framework): string {
   return `<!DOCTYPE html>
 <html>
   <body>
