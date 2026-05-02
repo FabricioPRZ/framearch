@@ -252,3 +252,88 @@ function generatePackageJson(
     ) + "\n"
   );
 }
+
+function generateNavigation(framework: Framework): string {
+  if (framework.id === "react") {
+    return `import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+export function Router(): JSX.Element {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<div>Welcome</div>} />
+        {/* Feature routes will be added here */}
+      </Routes>
+    </BrowserRouter>
+  );
+}
+`;
+  }
+
+  return `// Navigation for ${framework.name}\n`;
+}
+
+function generateNetworkClient(): string {
+  return `export const http = {
+  get: async () => {},
+};`;
+}
+
+function generateGitignore(): string {
+  return `node_modules
+dist
+.env
+`;
+}
+
+function generateMainEntry(framework: Framework): string {
+  if (framework.id === "react") {
+    return `import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+
+ReactDOM.createRoot(document.getElementById("root")!).render(<App />);
+`;
+  }
+  return ``;
+}
+
+function generateAppComponent(framework: Framework): string {
+  if (framework.id === "react") {
+    return `function App() {
+  return <h1>Hello</h1>;
+}
+
+export default App;
+`;
+  }
+  return ``;
+}
+
+function generateTsConfig(): string {
+  return JSON.stringify(
+    {
+      compilerOptions: {
+        target: "ES2020",
+      },
+    },
+    null,
+    2,
+  );
+}
+
+function generateViteConfig(): string {
+  return `import { defineConfig } from "vite";
+
+export default defineConfig({});
+`;
+}
+
+function generateIndexHtml(): string {
+  return `<!DOCTYPE html>
+<html>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>`;
+}
