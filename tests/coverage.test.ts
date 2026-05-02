@@ -19,7 +19,11 @@ async function makeTmp(): Promise<string> {
   return fs.mkdtemp(path.join(os.tmpdir(), "framearch-cov-"));
 }
 
-async function writePackageJson(dir: string, deps: Record<string, string>, devDeps: Record<string, string> = {}) {
+async function writePackageJson(
+  dir: string,
+  deps: Record<string, string>,
+  devDeps: Record<string, string> = {},
+) {
   await fs.writeJson(path.join(dir, "package.json"), {
     name: "test-app",
     dependencies: deps,
@@ -32,8 +36,12 @@ async function writePackageJson(dir: string, deps: Record<string, string>, devDe
 describe("detectExistingProject", () => {
   let tmp: string;
 
-  beforeEach(async () => { tmp = await makeTmp(); });
-  afterEach(async () => { await fs.remove(tmp); });
+  beforeEach(async () => {
+    tmp = await makeTmp();
+  });
+  afterEach(async () => {
+    await fs.remove(tmp);
+  });
 
   it("returns null when package.json does not exist", async () => {
     const result = await detectExistingProject(tmp);
@@ -131,8 +139,12 @@ describe("detectExistingProject", () => {
 describe("injectReactFeatureRoutes", () => {
   let tmp: string;
 
-  beforeEach(async () => { tmp = await makeTmp(); });
-  afterEach(async () => { await fs.remove(tmp); });
+  beforeEach(async () => {
+    tmp = await makeTmp();
+  });
+  afterEach(async () => {
+    await fs.remove(tmp);
+  });
 
   const routerTemplate = `import { BrowserRouter, Routes, Route } from "react-router-dom";
 
@@ -163,7 +175,13 @@ export function Router(): JSX.Element {
     await expect(
       injectReactFeatureRoutes(tmp, {
         featureName: "auth",
-        routes: [{ path: "/auth/login", componentName: "LoginAuthView", importPath: "../../features/auth" }],
+        routes: [
+          {
+            path: "/auth/login",
+            componentName: "LoginAuthView",
+            importPath: "../../features/auth",
+          },
+        ],
       }),
     ).resolves.toBeUndefined();
   });
@@ -172,7 +190,9 @@ export function Router(): JSX.Element {
     await writeRouter();
     await injectReactFeatureRoutes(tmp, {
       featureName: "auth",
-      routes: [{ path: "/auth/login", componentName: "LoginAuthView", importPath: "../../features/auth" }],
+      routes: [
+        { path: "/auth/login", componentName: "LoginAuthView", importPath: "../../features/auth" },
+      ],
     });
     const content = await readRouter();
     expect(content).toContain('import { LoginAuthView } from "../../features/auth"');
@@ -184,7 +204,11 @@ export function Router(): JSX.Element {
       featureName: "auth",
       routes: [
         { path: "/auth/login", componentName: "LoginAuthView", importPath: "../../features/auth" },
-        { path: "/auth/register", componentName: "RegisterAuthView", importPath: "../../features/auth" },
+        {
+          path: "/auth/register",
+          componentName: "RegisterAuthView",
+          importPath: "../../features/auth",
+        },
       ],
     });
     const content = await readRouter();
@@ -196,7 +220,9 @@ export function Router(): JSX.Element {
     await writeRouter();
     await injectReactFeatureRoutes(tmp, {
       featureName: "auth",
-      routes: [{ path: "/auth/login", componentName: "LoginAuthView", importPath: "../../features/auth" }],
+      routes: [
+        { path: "/auth/login", componentName: "LoginAuthView", importPath: "../../features/auth" },
+      ],
     });
     const content = await readRouter();
     expect(content).toContain("{/* Feature routes will be added here */}");
@@ -207,8 +233,16 @@ export function Router(): JSX.Element {
     await injectReactFeatureRoutes(tmp, {
       featureName: "payments",
       routes: [
-        { path: "/payments/list", componentName: "ListPaymentsView", importPath: "../../features/payments" },
-        { path: "/payments/detail", componentName: "DetailPaymentsView", importPath: "../../features/payments" },
+        {
+          path: "/payments/list",
+          componentName: "ListPaymentsView",
+          importPath: "../../features/payments",
+        },
+        {
+          path: "/payments/detail",
+          componentName: "DetailPaymentsView",
+          importPath: "../../features/payments",
+        },
       ],
     });
     const content = await readRouter();
@@ -222,8 +256,12 @@ export function Router(): JSX.Element {
 describe("scaffoldProject", () => {
   let tmp: string;
 
-  beforeEach(async () => { tmp = await makeTmp(); });
-  afterEach(async () => { await fs.remove(tmp); });
+  beforeEach(async () => {
+    tmp = await makeTmp();
+  });
+  afterEach(async () => {
+    await fs.remove(tmp);
+  });
 
   it("creates files on disk for React + Vite + TypeScript", async () => {
     const result = await scaffoldProject({
@@ -250,118 +288,218 @@ describe("scaffoldProject", () => {
   });
 
   it("writes package.json", async () => {
-    await scaffoldProject({ outputDir: tmp, framework: reactFramework, buildTool: "vite", typescript: true });
+    await scaffoldProject({
+      outputDir: tmp,
+      framework: reactFramework,
+      buildTool: "vite",
+      typescript: true,
+    });
     const pkg = await fs.readJson(path.join(tmp, "package.json"));
     expect(pkg.name).toBe("my-app");
     expect(pkg.dependencies).toHaveProperty("react");
   });
 
   it("includes react-dom and react-router-dom for React", async () => {
-    await scaffoldProject({ outputDir: tmp, framework: reactFramework, buildTool: "vite", typescript: true });
+    await scaffoldProject({
+      outputDir: tmp,
+      framework: reactFramework,
+      buildTool: "vite",
+      typescript: true,
+    });
     const pkg = await fs.readJson(path.join(tmp, "package.json"));
     expect(pkg.dependencies).toHaveProperty("react-dom");
     expect(pkg.dependencies).toHaveProperty("react-router-dom");
   });
 
   it("writes tsconfig.json when typescript is true", async () => {
-    await scaffoldProject({ outputDir: tmp, framework: reactFramework, buildTool: "vite", typescript: true });
+    await scaffoldProject({
+      outputDir: tmp,
+      framework: reactFramework,
+      buildTool: "vite",
+      typescript: true,
+    });
     expect(await fs.pathExists(path.join(tmp, "tsconfig.json"))).toBe(true);
   });
 
   it("does not write tsconfig.json when typescript is false", async () => {
-    await scaffoldProject({ outputDir: tmp, framework: reactFramework, buildTool: "vite", typescript: false });
+    await scaffoldProject({
+      outputDir: tmp,
+      framework: reactFramework,
+      buildTool: "vite",
+      typescript: false,
+    });
     expect(await fs.pathExists(path.join(tmp, "tsconfig.json"))).toBe(false);
   });
 
   it("writes vite.config.ts for Vite build tool", async () => {
-    await scaffoldProject({ outputDir: tmp, framework: reactFramework, buildTool: "vite", typescript: true });
+    await scaffoldProject({
+      outputDir: tmp,
+      framework: reactFramework,
+      buildTool: "vite",
+      typescript: true,
+    });
     expect(await fs.pathExists(path.join(tmp, "vite.config.ts"))).toBe(true);
   });
 
   it("writes vite.config.js for Vite without TypeScript", async () => {
-    await scaffoldProject({ outputDir: tmp, framework: reactFramework, buildTool: "vite", typescript: false });
+    await scaffoldProject({
+      outputDir: tmp,
+      framework: reactFramework,
+      buildTool: "vite",
+      typescript: false,
+    });
     expect(await fs.pathExists(path.join(tmp, "vite.config.js"))).toBe(true);
   });
 
   it("writes index.html for Vite", async () => {
-    await scaffoldProject({ outputDir: tmp, framework: reactFramework, buildTool: "vite", typescript: true });
+    await scaffoldProject({
+      outputDir: tmp,
+      framework: reactFramework,
+      buildTool: "vite",
+      typescript: true,
+    });
     expect(await fs.pathExists(path.join(tmp, "index.html"))).toBe(true);
   });
 
   it("writes next.config.mjs for Next.js build tool", async () => {
-    await scaffoldProject({ outputDir: tmp, framework: reactFramework, buildTool: "nextjs", typescript: true });
+    await scaffoldProject({
+      outputDir: tmp,
+      framework: reactFramework,
+      buildTool: "nextjs",
+      typescript: true,
+    });
     expect(await fs.pathExists(path.join(tmp, "next.config.mjs"))).toBe(true);
   });
 
   it("does not write vite.config for Next.js", async () => {
-    await scaffoldProject({ outputDir: tmp, framework: reactFramework, buildTool: "nextjs", typescript: true });
+    await scaffoldProject({
+      outputDir: tmp,
+      framework: reactFramework,
+      buildTool: "nextjs",
+      typescript: true,
+    });
     expect(await fs.pathExists(path.join(tmp, "vite.config.ts"))).toBe(false);
   });
 
   it("writes .gitignore", async () => {
-    await scaffoldProject({ outputDir: tmp, framework: reactFramework, buildTool: "vite", typescript: true });
+    await scaffoldProject({
+      outputDir: tmp,
+      framework: reactFramework,
+      buildTool: "vite",
+      typescript: true,
+    });
     expect(await fs.pathExists(path.join(tmp, ".gitignore"))).toBe(true);
   });
 
   it("writes .env and .env.example", async () => {
-    await scaffoldProject({ outputDir: tmp, framework: reactFramework, buildTool: "vite", typescript: true });
+    await scaffoldProject({
+      outputDir: tmp,
+      framework: reactFramework,
+      buildTool: "vite",
+      typescript: true,
+    });
     expect(await fs.pathExists(path.join(tmp, ".env"))).toBe(true);
     expect(await fs.pathExists(path.join(tmp, ".env.example"))).toBe(true);
   });
 
   it("scaffolds Vue + Vite correctly", async () => {
-    const result = await scaffoldProject({ outputDir: tmp, framework: vueFramework, buildTool: "vite", typescript: true });
+    const result = await scaffoldProject({
+      outputDir: tmp,
+      framework: vueFramework,
+      buildTool: "vite",
+      typescript: true,
+    });
     const pkg = await fs.readJson(path.join(tmp, "package.json"));
     expect(pkg.dependencies).toHaveProperty("vue");
     expect(result.files.length).toBeGreaterThan(0);
   });
 
   it("scaffolds Svelte + Vite correctly", async () => {
-    await scaffoldProject({ outputDir: tmp, framework: svelteFramework, buildTool: "vite", typescript: true });
+    await scaffoldProject({
+      outputDir: tmp,
+      framework: svelteFramework,
+      buildTool: "vite",
+      typescript: true,
+    });
     const pkg = await fs.readJson(path.join(tmp, "package.json"));
     expect(pkg.dependencies).toHaveProperty("svelte");
   });
 
   it("scaffolds Angular correctly", async () => {
-    await scaffoldProject({ outputDir: tmp, framework: angularFramework, buildTool: "vite", typescript: true });
+    await scaffoldProject({
+      outputDir: tmp,
+      framework: angularFramework,
+      buildTool: "vite",
+      typescript: true,
+    });
     const pkg = await fs.readJson(path.join(tmp, "package.json"));
     expect(pkg.dependencies).toHaveProperty("@angular/core");
   });
 
   it("package.json scripts include dev and build for vite", async () => {
-    await scaffoldProject({ outputDir: tmp, framework: reactFramework, buildTool: "vite", typescript: true });
+    await scaffoldProject({
+      outputDir: tmp,
+      framework: reactFramework,
+      buildTool: "vite",
+      typescript: true,
+    });
     const pkg = await fs.readJson(path.join(tmp, "package.json"));
     expect(pkg.scripts.dev).toBe("vite");
     expect(pkg.scripts.build).toContain("vite build");
   });
 
   it("package.json scripts include dev, build, start for nextjs", async () => {
-    await scaffoldProject({ outputDir: tmp, framework: reactFramework, buildTool: "nextjs", typescript: true });
+    await scaffoldProject({
+      outputDir: tmp,
+      framework: reactFramework,
+      buildTool: "nextjs",
+      typescript: true,
+    });
     const pkg = await fs.readJson(path.join(tmp, "package.json"));
     expect(pkg.scripts.dev).toBe("next dev");
     expect(pkg.scripts.start).toBe("next start");
   });
 
   it("writes main entry file", async () => {
-    const result = await scaffoldProject({ outputDir: tmp, framework: reactFramework, buildTool: "vite", typescript: true });
+    const result = await scaffoldProject({
+      outputDir: tmp,
+      framework: reactFramework,
+      buildTool: "vite",
+      typescript: true,
+    });
     const hasMain = result.files.some((f) => f.includes("main."));
     expect(hasMain).toBe(true);
   });
 
   it("writes App component", async () => {
-    const result = await scaffoldProject({ outputDir: tmp, framework: reactFramework, buildTool: "vite", typescript: true });
+    const result = await scaffoldProject({
+      outputDir: tmp,
+      framework: reactFramework,
+      buildTool: "vite",
+      typescript: true,
+    });
     const hasApp = result.files.some((f) => f.includes("App."));
     expect(hasApp).toBe(true);
   });
 
   it(".gitignore references dist for vite", async () => {
-    await scaffoldProject({ outputDir: tmp, framework: reactFramework, buildTool: "vite", typescript: true });
+    await scaffoldProject({
+      outputDir: tmp,
+      framework: reactFramework,
+      buildTool: "vite",
+      typescript: true,
+    });
     const gitignore = await fs.readFile(path.join(tmp, ".gitignore"), "utf-8");
     expect(gitignore).toContain("dist");
   });
 
   it(".gitignore references .next for nextjs", async () => {
-    await scaffoldProject({ outputDir: tmp, framework: reactFramework, buildTool: "nextjs", typescript: true });
+    await scaffoldProject({
+      outputDir: tmp,
+      framework: reactFramework,
+      buildTool: "nextjs",
+      typescript: true,
+    });
     const gitignore = await fs.readFile(path.join(tmp, ".gitignore"), "utf-8");
     expect(gitignore).toContain(".next");
   });
