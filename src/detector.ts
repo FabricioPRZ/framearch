@@ -10,9 +10,7 @@ export interface DetectedProject {
   buildTool: string;
 }
 
-export async function detectExistingProject(
-  dir: string,
-): Promise<DetectedProject | null> {
+export async function detectExistingProject(dir: string): Promise<DetectedProject | null> {
   const packagePath = path.resolve(dir, "package.json");
   const exists = await fs.pathExists(packagePath);
   if (!exists) return null;

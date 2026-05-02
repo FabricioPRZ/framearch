@@ -38,22 +38,22 @@ Then framearch generates a complete, typed, ready-to-wire feature folder.
 
 ## Supported frameworks
 
-| ID | Name | File extension |
-|----|------|---------------|
-| `react` | React (TypeScript) | `.tsx` |
-| `vue` | Vue 3 + Composition API | `.vue` |
-| `svelte` | Svelte | `.svelte` |
-| `angular` | Angular | `.ts` |
+| ID        | Name                    | File extension |
+| --------- | ----------------------- | -------------- |
+| `react`   | React (TypeScript)      | `.tsx`         |
+| `vue`     | Vue 3 + Composition API | `.vue`         |
+| `svelte`  | Svelte                  | `.svelte`      |
+| `angular` | Angular                 | `.ts`          |
 
 ---
 
 ## Supported architectures
 
-| ID | Name | Status | Folder convention |
-|----|------|--------|------------------|
+| ID          | Name                   | Status    | Folder convention                                          |
+| ----------- | ---------------------- | --------- | ---------------------------------------------------------- |
 | `screaming` | Screaming Architecture | ✅ Stable | `src/features/<feat>/{components, hooks, services, types}` |
-| `mvc` | MVC | 🚧 WIP | `src/{models, views, controllers}/<feat>/` |
-| `mvvm` | MVVM | ✅ Stable | `src/{models, viewModels, views}/<feat>/` |
+| `mvc`       | MVC                    | 🚧 WIP    | `src/{models, views, controllers}/<feat>/`                 |
+| `mvvm`      | MVVM                   | ✅ Stable | `src/{models, viewModels, views}/<feat>/`                  |
 
 ---
 

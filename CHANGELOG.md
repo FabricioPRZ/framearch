@@ -10,6 +10,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+
 - Initial CLI with interactive prompts (`@inquirer/prompts`)
 - Framework registry: React, Vue 3, Svelte, Angular
 - Architecture registry with WIP flag support

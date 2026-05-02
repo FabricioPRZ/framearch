@@ -42,8 +42,7 @@ export async function runCli(): Promise<void> {
   const outputDir = await input({
     message: "Output directory:",
     default: ".",
-    validate: (v) =>
-      v.trim() ? true : "Output directory cannot be empty.",
+    validate: (v) => (v.trim() ? true : "Output directory cannot be empty."),
   });
 
   const detected = await detectExistingProject(outputDir);
@@ -151,17 +150,13 @@ export async function runCli(): Promise<void> {
       const wip = WIP_ARCH_IDS.has(a.id);
 
       return {
-        name: `${a.name}  ${
-          wip ? chalk.yellow("[WIP] ") : ""
-        }${chalk.dim(a.description)}`,
+        name: `${a.name}  ${wip ? chalk.yellow("[WIP] ") : ""}${chalk.dim(a.description)}`,
         value: a.id,
       };
     }),
   });
 
-  const architecture = ARCHITECTURES.find(
-    (a) => a.id === architectureId,
-  )!;
+  const architecture = ARCHITECTURES.find((a) => a.id === architectureId)!;
 
   if (WIP_ARCH_IDS.has(architectureId)) {
     console.log(
@@ -225,9 +220,7 @@ export async function runCli(): Promise<void> {
     });
 
     if (framework.id === "react" && architecture.id === "mvvm") {
-      const Feat =
-        featureName.charAt(0).toUpperCase() +
-        featureName.slice(1);
+      const Feat = featureName.charAt(0).toUpperCase() + featureName.slice(1);
 
       await injectReactFeatureRoutes(outputDir, {
         featureName,
@@ -265,17 +258,14 @@ ${chalk.bold("Next steps:")}
   } catch (err) {
     spinner.fail(chalk.red("Generation failed"));
 
-    const message =
-      err instanceof Error ? err.message : String(err);
+    const message = err instanceof Error ? err.message : String(err);
 
     console.error(chalk.red(message));
     process.exit(1);
   }
 }
 
-async function askForFramework(): Promise<
-  (typeof FRAMEWORKS)[number]
-> {
+async function askForFramework(): Promise<(typeof FRAMEWORKS)[number]> {
   const frameworkId = await select({
     message: "Framework:",
     choices: FRAMEWORKS.map((f) => ({

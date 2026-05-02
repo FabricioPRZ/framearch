@@ -22,17 +22,11 @@ export interface ScaffoldResult {
  * - .env, .env.example, .gitignore
  * - src/ entry point and index.html (for Vite)
  */
-export async function scaffoldProject(
-  options: ProjectScaffoldOptions,
-): Promise<ScaffoldResult> {
+export async function scaffoldProject(options: ProjectScaffoldOptions): Promise<ScaffoldResult> {
   const { outputDir, framework, buildTool, typescript } = options;
   const writtenFiles: string[] = [];
 
-  const templates = getProjectTemplates(
-    framework,
-    buildTool,
-    typescript,
-  );
+  const templates = getProjectTemplates(framework, buildTool, typescript);
 
   for (const template of templates) {
     const absolutePath = path.resolve(outputDir, template.path);
@@ -56,10 +50,7 @@ function getProjectTemplates(
   content: string;
 }> {
   const ext = typescript ? "ts" : "js";
-  const mainFile =
-    framework.id === "react"
-      ? `main.${typescript ? "tsx" : "jsx"}`
-      : `main.${ext}`;
+  const mainFile = framework.id === "react" ? `main.${typescript ? "tsx" : "jsx"}` : `main.${ext}`;
 
   const templates: Array<{
     path: string;
@@ -67,21 +58,17 @@ function getProjectTemplates(
   }> = [
     {
       path: "package.json",
-      content: generatePackageJson(
-        framework,
-        buildTool,
-        typescript,
-      ),
+      content: generatePackageJson(framework, buildTool, typescript),
     },
     {
       path: `src/core/navigation/Router.${
         framework.id === "react"
           ? "tsx"
           : framework.id === "vue"
-          ? "vue"
-          : framework.id === "svelte"
-          ? "svelte"
-          : "ts"
+            ? "vue"
+            : framework.id === "svelte"
+              ? "svelte"
+              : "ts"
       }`,
       content: generateNavigation(framework),
     },
@@ -163,11 +150,7 @@ export default nextConfig;
   return templates;
 }
 
-function generatePackageJson(
-  framework: Framework,
-  buildTool: string,
-  typescript: boolean,
-): string {
+function generatePackageJson(framework: Framework, buildTool: string, typescript: boolean): string {
   const deps: Record<string, string> = {};
   const devDeps: Record<string, string> = {};
 
@@ -240,12 +223,8 @@ function generatePackageJson(
         version: "0.0.0",
         type: "module",
         scripts,
-        dependencies: Object.keys(deps).length
-          ? deps
-          : undefined,
-        devDependencies: Object.keys(devDeps).length
-          ? devDeps
-          : undefined,
+        dependencies: Object.keys(deps).length ? deps : undefined,
+        devDependencies: Object.keys(devDeps).length ? devDeps : undefined,
       },
       null,
       2,
@@ -279,10 +258,7 @@ function generateNetworkClient(_framework: Framework): string {
 };`;
 }
 
-function generateGitignore(
-  _framework: Framework,
-  buildTool: string,
-): string {
+function generateGitignore(_framework: Framework, buildTool: string): string {
   return `node_modules
 ${buildTool === "nextjs" ? ".next" : "dist"}
 .env
@@ -301,10 +277,7 @@ function generateTsConfig(_framework: Framework): string {
   );
 }
 
-function generateViteConfig(
-  _framework: Framework,
-  _typescript: boolean,
-): string {
+function generateViteConfig(_framework: Framework, _typescript: boolean): string {
   return `import { defineConfig } from "vite";
 
 export default defineConfig({});

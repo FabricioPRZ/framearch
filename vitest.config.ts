@@ -9,9 +9,9 @@ export default defineConfig({
       reporter: ["text", "lcov", "html"],
       include: ["src/**/*.ts"],
       exclude: [
-        "src/index.ts",   // solo llama a runCli()
-        "src/cli.ts",     // prompts interactivos, se testean con e2e
-        "src/types.ts",   // solo interfaces, sin código ejecutable
+        "src/index.ts", // solo llama a runCli()
+        "src/cli.ts", // prompts interactivos, se testean con e2e
+        "src/types.ts", // solo interfaces, sin código ejecutable
       ],
       thresholds: {
         lines: 80,

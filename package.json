@@ -68,10 +68,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/TU_ORG/framearch.git"
+    "url": "https://github.com/FabricioPRZ/framearch.git"
   },
   "bugs": {
-    "url": "https://github.com/TU_ORG/framearch/issues"
+    "url": "https://github.com/FabricioPRZ/framearch/issues"
   },
-  "homepage": "https://github.com/TU_ORG/framearch#readme"
+  "homepage": "https://github.com/FabricioPRZ/framearch#readme"
 }

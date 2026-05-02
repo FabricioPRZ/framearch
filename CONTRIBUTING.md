@@ -82,7 +82,7 @@ import type { Architecture, FileTemplate, GenerateContext } from "../../types.js
 
 function generate(ctx: GenerateContext): FileTemplate[] {
   const { featureName, framework } = ctx;
-  const feat = featureName;          // e.g. "auth"
+  const feat = featureName; // e.g. "auth"
   const Feat = feat.charAt(0).toUpperCase() + feat.slice(1); // "Auth"
   const base = `src/my-convention/${feat}`;
 
@@ -101,7 +101,7 @@ function generate(ctx: GenerateContext): FileTemplate[] {
 }
 
 export const myArchitecture: Architecture = {
-  id: "my-arch",            // unique kebab-case identifier
+  id: "my-arch", // unique kebab-case identifier
   name: "My Architecture",
   description: "One sentence explanation",
   folderConvention: "src/{...}/<feature>/",
@@ -116,7 +116,7 @@ export const myArchitecture: Architecture = {
 ```ts
 throw new Error(
   `My Architecture does not support ${framework.name} yet. ` +
-  "See CONTRIBUTING.md to add support."
+    "See CONTRIBUTING.md to add support.",
 );
 ```
 
@@ -234,20 +234,20 @@ npx prettier --write "src/**/*.ts" "tests/**/*.ts"  # auto-fix formatting
 
 Coverage is measured with `vitest --coverage`. The following files are excluded because they have no executable logic or are covered by manual/e2e testing:
 
-| File | Reason excluded |
-|------|----------------|
-| `src/types.ts` | Only TypeScript interfaces, no runtime code |
-| `src/cli.ts` | Interactive prompts — tested manually or via e2e |
-| `src/index.ts` | Single-line entry point that calls `runCli()` |
+| File           | Reason excluded                                  |
+| -------------- | ------------------------------------------------ |
+| `src/types.ts` | Only TypeScript interfaces, no runtime code      |
+| `src/cli.ts`   | Interactive prompts — tested manually or via e2e |
+| `src/index.ts` | Single-line entry point that calls `runCli()`    |
 
 Current thresholds:
 
-| Metric | Threshold |
-|--------|-----------|
-| Lines | 80% |
-| Statements | 80% |
-| Branches | 85% |
-| Functions | 75% |
+| Metric     | Threshold |
+| ---------- | --------- |
+| Lines      | 80%       |
+| Statements | 80%       |
+| Branches   | 85%       |
+| Functions  | 75%       |
 
 PRs that drop below these thresholds will fail CI.
 
@@ -272,15 +272,15 @@ PRs that drop below these thresholds will fail CI.
 
 We follow [Conventional Commits](https://www.conventionalcommits.org/):
 
-| Prefix | When to use |
-|--------|-------------|
-| `feat:` | New framework, architecture, or CLI feature |
-| `fix:` | Bug fix |
-| `docs:` | README, CONTRIBUTING, comments |
-| `test:` | Adding or fixing tests |
-| `style:` | Formatting only (prettier, whitespace) |
+| Prefix      | When to use                                     |
+| ----------- | ----------------------------------------------- |
+| `feat:`     | New framework, architecture, or CLI feature     |
+| `fix:`      | Bug fix                                         |
+| `docs:`     | README, CONTRIBUTING, comments                  |
+| `test:`     | Adding or fixing tests                          |
+| `style:`    | Formatting only (prettier, whitespace)          |
 | `refactor:` | Internal restructuring without behaviour change |
-| `chore:` | Tooling, deps, CI |
+| `chore:`    | Tooling, deps, CI                               |
 
 Examples:
 
@@ -294,11 +294,13 @@ test: exclude cli.ts from coverage, adjust thresholds
 ---
 
 ## Branch conventions
-Use: `[type]/[issue]-[description]`  
 
-Examples:  
-- `feat/55-user-registration`  
-- `fix/89-mobile-responsive-header`  
+Use: `[type]/[issue]-[description]`
+
+Examples:
+
+- `feat/55-user-registration`
+- `fix/89-mobile-responsive-header`
 
 Alllowed types:  
 `feat`, `fix`, `docs`, `refactor`, `test`, `chore`.
@@ -318,6 +320,7 @@ git push --follow-tags
 ```
 
 The `publish.yml` workflow will:
+
 - Run all checks (typecheck, test, build)
 - Publish to npm with provenance (`NPM_TOKEN` secret required)
 - Create a GitHub Release with auto-generated notes
