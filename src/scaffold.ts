@@ -319,3 +319,48 @@ function generateIndexHtml(_framework: Framework): string {
   </body>
 </html>`;
 }
+
+function generateMainEntry(framework: Framework): string {
+  if (framework.id === "react") {
+    return `import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import App from "./App";
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+);
+`;
+  }
+
+  if (framework.id === "vue") {
+    return `import { createApp } from "vue";
+import App from "./App.vue";
+
+createApp(App).mount("#root");
+`;
+  }
+
+  return "";
+}
+
+function generateAppComponent(framework: Framework): string {
+  if (framework.id === "react") {
+    return `function App() {
+  return <h1>Welcome</h1>;
+}
+
+export default App;
+`;
+  }
+
+  if (framework.id === "vue") {
+    return `<template>
+  <h1>Welcome</h1>
+</template>
+`;
+  }
+
+  return "";
+}
