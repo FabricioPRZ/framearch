@@ -242,7 +242,7 @@ function generateTsConfig(_framework: Framework): string {
   return JSON.stringify({ compilerOptions: { target: "ES2020" } }, null, 2);
 }
 
-function generateViteConfig(framework: Framework, typescript: boolean): string {
+function generateViteConfig(framework: Framework, _typescript: boolean): string {
   if (framework.id === "react") {
     return `import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
