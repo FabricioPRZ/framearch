@@ -1315,14 +1315,16 @@ export class ${Feat}ViewModel {
     },
     {
       path: `${base}/presentation/views/login-${feat}.view.ts`,
-      content: `import { Component } from "@angular/core";
+      content: `import { Component, OnDestroy } from "@angular/core";
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from "@angular/forms";
+import { CommonModule } from "@angular/common";
+import { Subscription } from "rxjs";
 import { ${Feat}ViewModel } from "../viewModels/${feat}.viewmodel.js";
 
 @Component({
   selector: "app-login-${feat}",
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, CommonModule],
   template: \`
     <form [formGroup]="form" (ngSubmit)="submit()" aria-label="${Feat} login form">
       <div>
@@ -1338,39 +1340,44 @@ import { ${Feat}ViewModel } from "../viewModels/${feat}.viewmodel.js";
     </form>
   \`,
 })
-export class Login${Feat}View {
+export class Login${Feat}View implements OnDestroy {
   form: FormGroup;
   isLoading = false;
   error: string | null = null;
+  private subs = new Subscription();
 
   constructor(private fb: FormBuilder, private vm: ${Feat}ViewModel) {
     this.form = this.fb.group({
       email: ["", [Validators.required, Validators.email]],
       password: ["", [Validators.required, Validators.minLength(8)]],
     });
+    this.subs.add(this.vm.isLoading$.subscribe((loading) => (this.isLoading = loading)));
+    this.subs.add(this.vm.error$.subscribe((err) => (this.error = err)));
   }
 
   submit(): void {
     if (this.form.invalid) return;
-    this.isLoading = true;
-    this.error = null;
     this.vm.login(this.form.value);
-    this.vm.isLoading$.subscribe((loading) => (this.isLoading = loading));
-    this.vm.error$.subscribe((err) => (this.error = err));
+  }
+
+  ngOnDestroy(): void {
+    this.subs.unsubscribe();
   }
 }
 `,
     },
     {
       path: `${base}/presentation/views/register-${feat}.view.ts`,
-      content: `import { Component } from "@angular/core";
+      content: `import { Component, OnDestroy } from "@angular/core";
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from "@angular/forms";
+import { CommonModule } from "@angular/common";
+import { Subscription } from "rxjs";
 import { ${Feat}ViewModel } from "../viewModels/${feat}.viewmodel.js";
 
 @Component({
   selector: "app-register-${feat}",
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, CommonModule],
   template: \`
     <form [formGroup]="form" (ngSubmit)="submit()" aria-label="${Feat} registration form">
       <div>
@@ -1390,10 +1397,11 @@ import { ${Feat}ViewModel } from "../viewModels/${feat}.viewmodel.js";
     </form>
   \`,
 })
-export class Register${Feat}View {
+export class Register${Feat}View implements OnDestroy {
   form: FormGroup;
   isLoading = false;
   error: string | null = null;
+  private subs = new Subscription();
 
   constructor(private fb: FormBuilder, private vm: ${Feat}ViewModel) {
     this.form = this.fb.group({
@@ -1401,27 +1409,19 @@ export class Register${Feat}View {
       email: ["", [Validators.required, Validators.email]],
       password: ["", [Validators.required, Validators.minLength(8)]],
     });
+    this.subs.add(this.vm.isLoading$.subscribe((loading) => (this.isLoading = loading)));
+    this.subs.add(this.vm.error$.subscribe((err) => (this.error = err)));
   }
 
   submit(): void {
     if (this.form.invalid) return;
-    this.isLoading = true;
-    this.error = null;
     this.vm.register(this.form.value);
-    this.vm.isLoading$.subscribe((loading) => (this.isLoading = loading));
-    this.vm.error$.subscribe((err) => (this.error = err));
+  }
+
+  ngOnDestroy(): void {
+    this.subs.unsubscribe();
   }
 }
-`,
-    },
-    {
-      path: `${base}/index.ts`,
-      content: `export { ${Feat}ViewModel } from "./presentation/viewModels/${feat}.viewmodel.js";
-export { Login${Feat}View } from "./presentation/views/login-${feat}.view.js";
-export { Register${Feat}View } from "./presentation/views/register-${feat}.view.js";
-export type { ${Feat}User, LoginCredentials, RegisterPayload } from "./domain/models/${feat}.model.js";
-export { I${Feat}Repository } from "./domain/repositories/${feat}Repository.interface.js";
-export { ${Feat}RepositoryImpl } from "./infrastructure/repositories/${feat}Repository.impl.js";
 `,
     },
   ];

@@ -15,7 +15,9 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Interactive CLI with `@inquirer/prompts` (output directory, framework, feature name, architecture, dry-run)
 - Auto-detection of existing projects via `detectExistingProject()` — reads `package.json` and identifies framework, build tool, and TypeScript presence
 - Project scaffolding via `scaffoldProject()` — generates `package.json`, build config, `tsconfig.json`, `.env`, `.gitignore`, entry point, and `App` component
-- Automatic `npm install` after project scaffold
+- Angular projects are scaffolded using `ng new` via `@angular/cli` — not Vite — matching the conventional Angular toolchain
+- Build tool selection is skipped for Angular (always uses Angular CLI)
+- Automatic `npm install` after project scaffold for non-Angular frameworks
 - Feature route injection for React projects via `injectReactFeatureRoutes()` — patches `src/core/navigation/Router.tsx` in place
 - Dry-run mode — previews all files that would be generated without writing to disk
 - `previewGenerator()` pure helper (no I/O, used in dry-run and tests)
@@ -52,6 +54,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Vue: `ref`/`readonly` based ViewModel composable
 - Svelte: `writable` store ViewModel
 - Angular: `BehaviorSubject`-based ViewModel service + `Observable` repository contract
+- Angular views import `CommonModule` to support `*ngIf` in standalone components
+- Angular views subscribe to `isLoading$` and `error$` in the constructor (not in `submit()`) and unsubscribe via `ngOnDestroy` to prevent memory leaks
 - Automatic route injection into `Router.tsx` when React + MVVM is selected
 
 #### MVC Architecture (`src/architectures/mvc/`) 🚧 WIP
@@ -63,18 +67,30 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - `tsup` for ESM build with `#!/usr/bin/env node` banner
 - ESLint with `@typescript-eslint` — `no-explicit-any` as error, `_`-prefix convention for unused params
 - Prettier formatting enforced in CI
+- `vite.config` now includes the correct framework plugin per framework (`@vitejs/plugin-react`, `@vitejs/plugin-vue`, `@sveltejs/vite-plugin-svelte`)
+- `index.html` generated with proper `<script type="module">` tag pointing to the entry file
+- Svelte `main.ts` generated with correct `new App({ target })` mount pattern
 
 #### Testing
 - Vitest test suite — `tests/architectures.test.ts` and `tests/integration.test.ts`
 - Coverage via `v8` provider with thresholds: lines 80%, statements 80%, branches 85%, functions 75%
 - Excluded from coverage: `src/index.ts` (entry point), `src/cli.ts` (interactive prompts), `src/types.ts` (interfaces only)
 - Tests cover: architecture registry, framework registry, `screamingArchitecture` (all frameworks), `mvvmArchitecture` (all frameworks, all three layers), `detectExistingProject`, `injectReactFeatureRoutes`, `scaffoldProject`, `runGenerator`, `previewGenerator`, WIP architecture error throwing
+- Angular scaffold tests use a simulated `ng new` output (mock filesystem) instead of executing the real CLI — keeps tests fast and CI-safe
+- Vite config tests assert that the correct framework plugin is present in the generated config file
 
 #### CI/CD
 - `ci.yml` — runs on every PR; matrix across Node 18, 20, 22; runs typecheck, lint, tests
 - `publish.yml` — triggers on `v*` tags; runs full checks, publishes to npm with provenance, creates GitHub Release with auto-generated notes
 - GitHub issue templates (bug report, feature request)
 - Pull Request template with architecture/framework checklists
+
+### Fixed
+- Angular MVVM views: `*ngIf` now works correctly — `CommonModule` added to `imports[]` in standalone components
+- Angular MVVM views: subscriptions to `isLoading$` and `error$` moved from `submit()` to the constructor, preventing duplicate subscriptions and memory leaks on every form submission
+- `vite.config` generated without framework plugins for all frameworks — now includes the correct plugin per framework
+- `index.html` missing `<script>` tag — entry point now correctly referenced
+- `generateMainEntry()` and `generateAppComponent()` returned empty strings for Svelte — now generate correct mount code
 
 ---
 

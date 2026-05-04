@@ -118,6 +118,21 @@ When using React + MVVM, framearch also injects the feature routes into `src/cor
 
 ---
 
+## How scaffolding works per framework
+
+Each framework uses its conventional build tool:
+
+| Framework | Tool         | Internal command             |
+| --------- | ------------ | ----------------------------|
+| React     | Vite         | generates files directly     |
+| Vue 3     | Vite         | generates files directly     |
+| Svelte    | Vite         | generates files directly     |
+| Angular   | Angular CLI  | `npx @angular/cli new`       |
+
+Angular uses `ng new` instead of Vite to respect the standard Angular project structure and toolchain. framearch skips the build tool selection step when Angular is chosen — it always uses `@angular/cli`.
+
+---
+
 ## Dry-run mode
 
 Not sure what will be created? The CLI will ask before writing anything:
@@ -138,13 +153,16 @@ Files that would be created:
 
 ## Project scaffolding
 
-If framearch doesn't detect an existing project in the output directory, it offers to scaffold one from scratch — including `package.json`, build config (`vite` or `next`), `tsconfig.json`, `.env`, `.gitignore`, and a minimal app entry point. Dependencies are installed automatically after scaffolding.
+If framearch doesn't detect an existing project in the output directory, it offers to scaffold one from scratch:
+
+- **React / Vue / Svelte** — generates `package.json`, `vite.config` with the correct framework plugin, `tsconfig.json`, `index.html`, `.env`, `.gitignore`, and a minimal app entry point. Dependencies are installed automatically.
+- **Angular** — runs `ng new` with `--standalone`, `--routing`, and `--style=css`. The resulting project follows the standard Angular CLI structure.
 
 ---
 
 ## Contributing
 
-Want to add a new framework or architecture? See **[CONTRIBUTING.md](CONTRIBUTING.md)** — it walks through every step, including how to implement `generate()`, what tests are required, and how to add a new framework to existing architectures.
+Want to add a new framework or architecture? See **[CONTRIBUTING.md](CONTRIBUTING.md)** — it walks through every step, including how to implement `generate()`, what tests are required, how Angular scaffolding works, and how to add a new framework to existing architectures.
 
 The most needed contribution right now is completing the **MVC architecture** templates. See the [Implementing the MVC architecture](CONTRIBUTING.md#implementing-the-mvc-architecture) section for a step-by-step checklist.
 

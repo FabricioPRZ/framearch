@@ -52,8 +52,7 @@ export async function runCli(): Promise<void> {
   if (detected) {
     console.log(
       chalk.green(
-        `\n✓ Detected ${detected.framework.name} project (${
-          detected.buildTool
+        `\n✓ Detected ${detected.framework.name} project (${detected.buildTool
         })${detected.hasTypeScript ? " + TypeScript" : ""}\n`,
       ),
     );
@@ -77,20 +76,17 @@ export async function runCli(): Promise<void> {
     if (scaffold) {
       framework = await askForFramework();
 
-      const buildTool = await select({
-        message: "Build tool:",
-        choices: [
-          { name: "Vite  Fast HMR, lightweight", value: "vite" },
-          ...(framework.id === "react"
-            ? [
-                {
-                  name: "Next.js  Full-stack React framework",
-                  value: "nextjs",
-                },
-              ]
-            : []),
-        ],
-      });
+      const buildTool = framework.id === "angular"
+        ? "ng-new" // Angular usa su propio CLI para scaffolding
+        : await select({
+          message: "Build tool:",
+          choices: [
+            { name: "Vite  Fast HMR, lightweight", value: "vite" },
+            ...(framework.id === "react"
+              ? [{ name: "Next.js  Full-stack React framework", value: "nextjs" }]
+              : []),
+          ],
+        });
 
       const typescript = await confirm({
         message: "Use TypeScript?",

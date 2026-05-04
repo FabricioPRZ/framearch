@@ -118,6 +118,21 @@ Al usar React + MVVM, framearch también inyecta las rutas de la feature en `src
 
 ---
 
+## Cómo funciona el scaffolding por framework
+
+Cada framework usa su herramienta de build convencional:
+
+| Framework | Herramienta      | Comando interno              |
+| --------- | ---------------- | ----------------------------|
+| React     | Vite             | genera archivos directamente |
+| Vue 3     | Vite             | genera archivos directamente |
+| Svelte    | Vite             | genera archivos directamente |
+| Angular   | Angular CLI      | `npx @angular/cli new`       |
+
+Angular usa `ng new` en lugar de Vite para respetar la estructura y el toolchain convencional de Angular. framearch no te pregunta la herramienta de build cuando seleccionas Angular — siempre usa `@angular/cli`.
+
+---
+
 ## Modo dry-run
 
 ¿No estás seguro de qué se va a crear? La CLI te pregunta antes de escribir nada:
@@ -138,13 +153,16 @@ Archivos que se crearían:
 
 ## Scaffolding de proyectos
 
-Si framearch no detecta un proyecto existente en el directorio de salida, ofrece crear uno desde cero — incluyendo `package.json`, configuración de build (`vite` o `next`), `tsconfig.json`, `.env`, `.gitignore` y un punto de entrada mínimo. Las dependencias se instalan automáticamente después del scaffolding.
+Si framearch no detecta un proyecto existente en el directorio de salida, ofrece crear uno desde cero:
+
+- **React / Vue / Svelte** — genera `package.json`, `vite.config` con el plugin correcto para cada framework, `tsconfig.json`, `index.html`, `.env`, `.gitignore` y el componente raíz. Las dependencias se instalan automáticamente.
+- **Angular** — ejecuta `ng new` con `--standalone`, `--routing` y `--style=css`. El proyecto resultante sigue la estructura estándar de Angular CLI.
 
 ---
 
 ## Contribuir
 
-¿Quieres agregar un nuevo framework o arquitectura? Consulta **[CONTRIBUTING.md](CONTRIBUTING.md)** — explica cada paso: cómo implementar `generate()`, qué tests se requieren y cómo agregar un nuevo framework a las arquitecturas existentes.
+¿Quieres agregar un nuevo framework o arquitectura? Consulta **[CONTRIBUTING.md](CONTRIBUTING.md)** — explica cada paso: cómo implementar `generate()`, qué tests se requieren, cómo manejar el scaffolding de Angular y cómo agregar un nuevo framework a las arquitecturas existentes.
 
 La contribución más necesaria en este momento es completar las plantillas de la **arquitectura MVC**. Consulta la sección [Implementando la arquitectura MVC](CONTRIBUTING.md#implementing-the-mvc-architecture) para ver el checklist paso a paso.
 
