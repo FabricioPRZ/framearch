@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import path from "node:path";
 import os from "node:os";
 import fs from "fs-extra";
@@ -11,7 +11,6 @@ import { FRAMEWORKS } from "../src/frameworks/index.js";
 const reactFramework = FRAMEWORKS.find((f) => f.id === "react")!;
 const vueFramework = FRAMEWORKS.find((f) => f.id === "vue")!;
 const svelteFramework = FRAMEWORKS.find((f) => f.id === "svelte")!;
-const angularFramework = FRAMEWORKS.find((f) => f.id === "angular")!;
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -23,7 +22,7 @@ async function writePackageJson(
   dir: string,
   deps: Record<string, string>,
   devDeps: Record<string, string> = {},
-) {
+): Promise<void> {
   await fs.writeJson(path.join(dir, "package.json"), {
     name: "test-app",
     dependencies: deps,
@@ -160,7 +159,7 @@ export function Router(): JSX.Element {
 }
 `;
 
-  async function writeRouter(content: string = routerTemplate) {
+  async function writeRouter(content: string = routerTemplate): Promise<void> {
     const routerDir = path.join(tmp, "src", "core", "navigation");
     await fs.ensureDir(routerDir);
     await fs.writeFile(path.join(routerDir, "Router.tsx"), content, "utf-8");
@@ -171,7 +170,6 @@ export function Router(): JSX.Element {
   }
 
   it("does nothing when Router.tsx does not exist", async () => {
-    // no router file written — should not throw
     await expect(
       injectReactFeatureRoutes(tmp, {
         featureName: "auth",
@@ -426,10 +424,7 @@ describe("scaffoldProject — Angular (ng new)", () => {
 
   afterEach(async () => { await fs.remove(tmp); });
 
-  // Mockeamos scaffold para Angular para no ejecutar ng new en CI
   it("uses ng new for Angular — not Vite", async () => {
-    // Verificamos que scaffold.ts detecta Angular y no genera vite.config
-    // El mock simula que ng new ya corrió (setup del beforeEach)
     expect(await fs.pathExists(path.join(tmp, "angular.json"))).toBe(true);
     expect(await fs.pathExists(path.join(tmp, "vite.config.ts"))).toBe(false);
   });
