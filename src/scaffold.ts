@@ -42,7 +42,10 @@ export async function scaffoldProject(options: ProjectScaffoldOptions): Promise<
   };
 }
 
-async function scaffoldAngularProject(outputDir: string, typescript: boolean): Promise<ScaffoldResult> {
+async function scaffoldAngularProject(
+  outputDir: string,
+  typescript: boolean,
+): Promise<ScaffoldResult> {
   const projectName = path.basename(path.resolve(outputDir));
   const parentDir = path.dirname(path.resolve(outputDir));
 
@@ -88,10 +91,7 @@ function getProjectTemplates(
   typescript: boolean,
 ): Array<{ path: string; content: string }> {
   const ext = typescript ? "ts" : "js";
-  const mainFile =
-    framework.id === "react"
-      ? `main.${typescript ? "tsx" : "jsx"}`
-      : `main.${ext}`;
+  const mainFile = framework.id === "react" ? `main.${typescript ? "tsx" : "jsx"}` : `main.${ext}`;
 
   const templates: Array<{ path: string; content: string }> = [
     {
@@ -100,7 +100,13 @@ function getProjectTemplates(
     },
     {
       path: `src/core/navigation/Router.${
-        framework.id === "react" ? "tsx" : framework.id === "vue" ? "vue" : framework.id === "svelte" ? "svelte" : "ts"
+        framework.id === "react"
+          ? "tsx"
+          : framework.id === "vue"
+            ? "vue"
+            : framework.id === "svelte"
+              ? "svelte"
+              : "ts"
       }`,
       content: generateNavigation(framework),
     },
@@ -134,11 +140,17 @@ function getProjectTemplates(
         2,
       ),
     });
-    templates.push({ path: "src/vite-env.d.ts", content: `/// <reference types="vite/client" />\n` });
+    templates.push({
+      path: "src/vite-env.d.ts",
+      content: `/// <reference types="vite/client" />\n`,
+    });
   }
 
   if (buildTool === "vite") {
-    templates.push({ path: `vite.config.${ext}`, content: generateViteConfig(framework, typescript) });
+    templates.push({
+      path: `vite.config.${ext}`,
+      content: generateViteConfig(framework, typescript),
+    });
     templates.push({ path: "index.html", content: generateIndexHtml(framework) });
   } else if (buildTool === "nextjs") {
     templates.push({
@@ -196,19 +208,21 @@ function generatePackageJson(framework: Framework, buildTool: string, typescript
     scripts["start"] = "next start";
   }
 
-  return JSON.stringify(
-    {
-      name: "my-app",
-      private: true,
-      version: "0.0.0",
-      type: "module",
-      scripts,
-      dependencies: Object.keys(deps).length ? deps : undefined,
-      devDependencies: Object.keys(devDeps).length ? devDeps : undefined,
-    },
-    null,
-    2,
-  ) + "\n";
+  return (
+    JSON.stringify(
+      {
+        name: "my-app",
+        private: true,
+        version: "0.0.0",
+        type: "module",
+        scripts,
+        dependencies: Object.keys(deps).length ? deps : undefined,
+        devDependencies: Object.keys(devDeps).length ? devDeps : undefined,
+      },
+      null,
+      2,
+    ) + "\n"
+  );
 }
 
 function generateNavigation(framework: Framework): string {
@@ -279,10 +293,10 @@ function generateIndexHtml(framework: Framework): string {
     framework.id === "react"
       ? `src/main.tsx`
       : framework.id === "vue"
-      ? `src/main.ts`
-      : framework.id === "svelte"
-      ? `src/main.ts`
-      : `src/main.ts`;
+        ? `src/main.ts`
+        : framework.id === "svelte"
+          ? `src/main.ts`
+          : `src/main.ts`;
 
   return `<!DOCTYPE html>
 <html lang="en">
