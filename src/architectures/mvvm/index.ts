@@ -1424,6 +1424,16 @@ export class Register${Feat}View implements OnDestroy {
 }
 `,
     },
+    {
+      path: `${base}/index.ts`,
+      content: `export { ${Feat}ViewModel } from "./presentation/viewModels/${feat}.viewmodel.js";
+export { Login${Feat}View } from "./presentation/views/login-${feat}.view.js";
+export { Register${Feat}View } from "./presentation/views/register-${feat}.view.js";
+export type { ${Feat}User, LoginCredentials, RegisterPayload } from "./domain/models/${feat}.model.js";
+export { I${Feat}Repository } from "./domain/repositories/${feat}Repository.interface.js";
+export { ${Feat}RepositoryImpl } from "./infrastructure/repositories/${feat}Repository.impl.js";
+`,
+    },
   ];
 }
 
