@@ -1,6 +1,6 @@
 # Contributing to framearch
 
-Thank you for wanting to contribute! This guide explains everything you need to know to add frameworks, architectures, fix bugs, or improve the CLI.
+Thank you for wanting to contribute! This guide covers everything you need to add frameworks, implement architectures, fix bugs, or improve the CLI.
 
 ---
 
@@ -10,11 +10,12 @@ Thank you for wanting to contribute! This guide explains everything you need to 
 2. [Project structure](#project-structure)
 3. [Adding a new architecture](#adding-a-new-architecture)
 4. [Adding a new framework](#adding-a-new-framework)
-5. [Running tests](#running-tests)
-6. [Code style](#code-style)
-7. [Commit conventions](#commit-conventions)
-8. ⁠⁠[Branch conventions](#branch-conventions)
-9. [Releasing a new version](#releasing-a-new-version)
+5. [Implementing the MVC architecture](#implementing-the-mvc-architecture)
+6. [Running tests](#running-tests)
+7. [Code style](#code-style)
+8. [Commit conventions](#commit-conventions)
+9. [Branch conventions](#branch-conventions)
+10. [Releasing a new version](#releasing-a-new-version)
 
 ---
 
@@ -44,17 +45,20 @@ framearch/
 ├── src/
 │   ├── types.ts                     # Core interfaces (Framework, Architecture, FileTemplate)
 │   ├── cli.ts                       # Interactive prompts & orchestration
-│   ├── generator.ts                 # Writes FileTemplates to disk
+│   ├── generator.ts                 # Writes FileTemplates to disk (runGenerator / previewGenerator)
+│   ├── scaffold.ts                  # Generates a full project from scratch (scaffoldProject)
+│   ├── detector.ts                  # Detects existing framework from package.json
+│   ├── featureRoutes.ts             # Injects React routes into Router.tsx
 │   ├── frameworks/
 │   │   └── index.ts                 # Framework registry — add new frameworks here
 │   └── architectures/
 │       ├── index.ts                 # Architecture registry — add new architectures here
-│       ├── screaming/index.ts       # ✅ Full reference implementation
-│       ├── mvc/index.ts             # 🚧 WIP stub
-│       └── mvvm/index.ts            # 🚧 WIP stub
+│       ├── screaming/index.ts       # ✅ Complete — React, Vue, Svelte, Angular
+│       ├── mvvm/index.ts            # ✅ Complete — React, Vue, Svelte, Angular
+│       └── mvc/index.ts             # 🚧 WIP — templates not yet implemented
 ├── tests/
-│   ├── generator.test.ts
-│   └── architectures.test.ts
+│   ├── architectures.test.ts        # Unit tests for architecture & framework registries
+│   └── integration.test.ts          # Integration tests for detector, scaffold, generator
 └── .github/
     ├── workflows/
     │   ├── ci.yml                   # Runs on every PR (Node 18, 20, 22)
@@ -82,7 +86,7 @@ import type { Architecture, FileTemplate, GenerateContext } from "../../types.js
 
 function generate(ctx: GenerateContext): FileTemplate[] {
   const { featureName, framework } = ctx;
-  const feat = featureName; // e.g. "auth"
+  const feat = featureName;                                  // e.g. "auth"
   const Feat = feat.charAt(0).toUpperCase() + feat.slice(1); // "Auth"
   const base = `src/my-convention/${feat}`;
 
@@ -101,7 +105,7 @@ function generate(ctx: GenerateContext): FileTemplate[] {
 }
 
 export const myArchitecture: Architecture = {
-  id: "my-arch", // unique kebab-case identifier
+  id: "my-arch",           // unique kebab-case identifier
   name: "My Architecture",
   description: "One sentence explanation",
   folderConvention: "src/{...}/<feature>/",
@@ -109,7 +113,7 @@ export const myArchitecture: Architecture = {
 };
 ```
 
-> 📌 See `src/architectures/screaming/index.ts` for a complete reference. It covers React, Vue, Svelte, and Angular with real, working auth code for each.
+> 📌 See `src/architectures/screaming/index.ts` or `src/architectures/mvvm/index.ts` for complete reference implementations covering all four frameworks.
 
 **Important:** if your `generate()` receives a framework you haven't implemented yet, throw a clear error rather than returning empty files:
 
@@ -139,55 +143,65 @@ import { myArchitecture } from "./my-arch/index.js";
 
 const registry: RegistryEntry[] = [
   { arch: screamingArchitecture },
+  { arch: mvvmArchitecture },
   // ...
   { arch: myArchitecture, wip: true }, // remove wip: true when all frameworks are covered
 ];
 ```
 
-The `wip: true` flag shows a warning in the CLI and prevents generation. Remove it only when all supported frameworks have working templates.
+The `wip: true` flag shows a warning in the CLI and prevents generation. Remove it only when every supported framework has working, non-placeholder templates.
 
 ### 3 — Add tests
 
-Add a block in `tests/architectures.test.ts`:
+Add a block in `tests/architectures.test.ts`. At minimum, cover:
 
 ```ts
 import { myArchitecture } from "../src/architectures/my-arch/index.js";
 
-describe("myArchitecture", () => {
-  it("generates valid templates for React", () => {
-    const templates = myArchitecture.generate({
-      featureName: "auth",
-      framework: FRAMEWORKS.find((f) => f.id === "react")!,
-      outputDir: "/tmp/test",
+describe("myArchitecture — all frameworks", () => {
+  const frameworks = FRAMEWORKS.filter((f) =>
+    ["react", "vue", "svelte", "angular"].includes(f.id),
+  );
+
+  for (const framework of frameworks) {
+    it(`generates valid templates for ${framework.name}`, () => {
+      const templates = myArchitecture.generate({
+        featureName: "auth",
+        framework,
+        outputDir: "/tmp/test",
+      });
+
+      expect(templates.length).toBeGreaterThan(0);
+
+      for (const t of templates) {
+        expect(typeof t.path).toBe("string");
+        expect(t.path.length).toBeGreaterThan(0);
+        expect(typeof t.content).toBe("string");
+        expect(t.content.length).toBeGreaterThan(0);
+      }
     });
 
-    expect(templates.length).toBeGreaterThan(0);
+    it(`${framework.name}: index.ts contains an export`, () => {
+      const templates = myArchitecture.generate({
+        featureName: "auth",
+        framework,
+        outputDir: "/tmp/test",
+      });
 
-    for (const t of templates) {
-      expect(typeof t.path).toBe("string");
-      expect(t.path.length).toBeGreaterThan(0);
-      expect(typeof t.content).toBe("string");
-      expect(t.content.length).toBeGreaterThan(0);
-    }
-  });
-
-  it("index.ts contains an export", () => {
-    const templates = myArchitecture.generate({
-      featureName: "auth",
-      framework: FRAMEWORKS.find((f) => f.id === "react")!,
-      outputDir: "/tmp/test",
+      const index = templates.find((t) => t.path.endsWith("index.ts"));
+      expect(index).toBeDefined();
+      expect(index!.content).toContain("export");
     });
-
-    const index = templates.find((t) => t.path.endsWith("index.ts"));
-    expect(index).toBeDefined();
-    expect(index!.content).toContain("export");
-  });
+  }
 });
 ```
 
-### 4 — Update the README
+Add more assertions for any structural requirements specific to your architecture (e.g. required subfolders, naming conventions).
 
-Add your architecture to the **Supported architectures** table in `README.md`.
+### 4 — Update docs
+
+- Add your architecture to the **Supported architectures** table in `README.md`.
+- Add an entry to `CHANGELOG.md` under `[Unreleased] → Added`.
 
 ---
 
@@ -195,7 +209,7 @@ Add your architecture to the **Supported architectures** table in `README.md`.
 
 ### 1 — Add to the registry
 
-Open `src/frameworks/index.ts` and append:
+Open `src/frameworks/index.ts` and append a new entry before the closing comment:
 
 ```ts
 {
@@ -210,11 +224,51 @@ Open `src/frameworks/index.ts` and append:
 
 ### 2 — Add templates to every stable architecture
 
-For each architecture where `wip` is **not** set (currently `screaming`), open its `index.ts` and add a case for your framework id inside the `builders` map or equivalent branching logic.
+For each architecture where `wip` is **not** set (currently `screaming` and `mvvm`), open its `index.ts` and add a case for your framework id inside the `builders` map or equivalent branching logic.
 
-### 3 — Update the README
+```ts
+// inside screaming/index.ts and mvvm/index.ts
+const builders: Record<string, () => FileTemplate[]> = {
+  react: () => reactTemplates(feat, Feat, base),
+  vue: () => vueTemplates(feat, Feat, base),
+  svelte: () => svelteTemplates(feat, Feat, base),
+  angular: () => angularTemplates(feat, Feat, base),
+  solid: () => solidTemplates(feat, Feat, base), // ← add your builder here
+};
+```
 
-Add your framework to the **Supported frameworks** table in `README.md`.
+Then implement the corresponding `solidTemplates()` function following the same pattern as the other framework builders in that file.
+
+### 3 — Update docs
+
+- Add your framework to the **Supported frameworks** table in `README.md`.
+- Add an entry to `CHANGELOG.md` under `[Unreleased] → Added`.
+
+---
+
+## Implementing the MVC architecture
+
+`src/architectures/mvc/index.ts` is the open contribution most needed right now. The `generate()` function currently throws — your task is to replace that with real working templates.
+
+**Expected folder convention:**
+
+```
+src/features/<feature>/
+  models/      → Data shapes and domain logic
+  views/       → UI components
+  controllers/ → Orchestrates model ↔ view interaction
+  index.ts     → Public API barrel
+```
+
+**Checklist before opening a PR:**
+
+- [ ] Templates implemented for all four frameworks (React, Vue 3, Svelte, Angular)
+- [ ] `wip: true` removed from the registry entry in `src/architectures/index.ts`
+- [ ] Tests added to `tests/architectures.test.ts` covering all frameworks
+- [ ] `CHANGELOG.md` updated
+- [ ] `README.md` architecture table updated
+
+Use `src/architectures/screaming/index.ts` as your structural reference. The screaming architecture is the most straightforward starting point because its templates map closely to MVC's own separation of concerns.
 
 ---
 
@@ -262,8 +316,9 @@ PRs that drop below these thresholds will fail CI.
 ## Code style
 
 - **TypeScript strict mode** — no `any`, no implicit returns.
-- **ESM only** — always use `.js` extension in imports even for `.ts` files (TypeScript resolves them at build time).
+- **ESM only** — always use `.js` extension in imports even for `.ts` source files (TypeScript resolves them at build time).
 - **Pure `generate()` functions** — no I/O, no side effects. Return `FileTemplate[]` only.
+- **Template content = real code** — write templates as you would write the actual feature. No TODOs, no empty stubs.
 - Run `npx prettier --write "src/**/*.ts" "tests/**/*.ts"` before committing to avoid format check failures in CI.
 
 ---
@@ -276,7 +331,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 | ----------- | ----------------------------------------------- |
 | `feat:`     | New framework, architecture, or CLI feature     |
 | `fix:`      | Bug fix                                         |
-| `docs:`     | README, CONTRIBUTING, comments                  |
+| `docs:`     | README, CONTRIBUTING, CHANGELOG, comments       |
 | `test:`     | Adding or fixing tests                          |
 | `style:`    | Formatting only (prettier, whitespace)          |
 | `refactor:` | Internal restructuring without behaviour change |
@@ -285,25 +340,31 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 Examples:
 
 ```
-feat(arch): add MVC architecture with React and Vue templates
-fix(screaming): prefix unused _ext parameter to satisfy strict TS
-style: apply prettier formatting to screaming index
-test: exclude cli.ts from coverage, adjust thresholds
+feat(arch): implement MVC architecture for React and Vue
+feat(framework): add SolidJS support to screaming and mvvm architectures
+fix(mvvm): correct Angular repository injection token
+docs: update CONTRIBUTING with MVC implementation guide
+test(mvvm): add Svelte layer structure assertions
+style: apply prettier formatting to mvc/index.ts
+chore: bump vitest to 1.6.0
 ```
 
 ---
 
 ## Branch conventions
 
-Use: `[type]/[issue]-[description]`
+Use: `[type]/[issue]-[short-description]`
 
 Examples:
 
-- `feat/55-user-registration`
-- `fix/89-mobile-responsive-header`
+- `feat/55-mvc-react-templates`
+- `feat/62-solid-framework-support`
+- `fix/89-mvvm-angular-injection`
+- `docs/14-update-contributing`
 
-Alllowed types:  
-`feat`, `fix`, `docs`, `refactor`, `test`, `chore`.
+Allowed types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`.
+
+---
 
 ## Releasing a new version
 
@@ -313,7 +374,7 @@ Maintainers only:
 # 1. Bump version in package.json
 npm version patch   # or minor / major
 
-# 2. Update CHANGELOG.md
+# 2. Update CHANGELOG.md — move [Unreleased] items under the new version heading
 
 # 3. Push — publish.yml handles the rest
 git push --follow-tags
@@ -321,7 +382,7 @@ git push --follow-tags
 
 The `publish.yml` workflow will:
 
-- Run all checks (typecheck, test, build)
+- Run all checks (typecheck, lint, test, build)
 - Publish to npm with provenance (`NPM_TOKEN` secret required)
 - Create a GitHub Release with auto-generated notes
 
