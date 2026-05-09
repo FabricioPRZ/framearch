@@ -30,10 +30,7 @@ function generate(ctx: GenerateContext): FileTemplate[] {
   const Feat = feat.charAt(0).toUpperCase() + feat.slice(1);
 
   // Angular files live under src/app/; all other frameworks use src/
-  const base =
-    framework.id === "angular"
-      ? `src/app/features/${feat}`
-      : `src/features/${feat}`;
+  const base = framework.id === "angular" ? `src/app/features/${feat}` : `src/features/${feat}`;
 
   const builders: Record<string, () => FileTemplate[]> = {
     react: () => reactTemplates(feat, Feat, base),

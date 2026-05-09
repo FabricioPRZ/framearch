@@ -310,8 +310,7 @@ export async function runCli(): Promise<void> {
     }
 
     // ── 4. Print next steps ──────────────────────────────────────────────────
-    const devCmd =
-      framework.id === "angular" ? "ng serve" : "npm run dev";
+    const devCmd = framework.id === "angular" ? "ng serve" : "npm run dev";
 
     console.log(`
 ${chalk.bold("Next steps:")}
