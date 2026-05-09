@@ -3,6 +3,7 @@ import fs from "fs-extra";
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
 import type { Framework } from "./types.js";
+import { ensureAngularCli } from "./angularGenerator.js";
 
 const execAsync = promisify(exec);
 
@@ -11,6 +12,9 @@ export interface ProjectScaffoldOptions {
   framework: Framework;
   buildTool: "vite" | "nextjs";
   typescript: boolean;
+  /** Angular only: the name passed to `ng new`. Falls back to the last segment
+   *  of outputDir if not provided. */
+  projectName?: string;
 }
 
 export interface ScaffoldResult {
@@ -18,12 +22,14 @@ export interface ScaffoldResult {
   outputDir: string;
 }
 
-export async function scaffoldProject(options: ProjectScaffoldOptions): Promise<ScaffoldResult> {
-  const { outputDir, framework, buildTool, typescript } = options;
+export async function scaffoldProject(
+  options: ProjectScaffoldOptions,
+  onStatus?: (msg: string) => void,
+): Promise<ScaffoldResult> {
+  const { outputDir, framework, buildTool, typescript, projectName } = options;
 
-  // Angular usa ng new, no Vite
   if (framework.id === "angular") {
-    return scaffoldAngularProject(outputDir, typescript);
+    return scaffoldAngularProject(outputDir, typescript, projectName, onStatus);
   }
 
   const writtenFiles: string[] = [];
@@ -42,31 +48,50 @@ export async function scaffoldProject(options: ProjectScaffoldOptions): Promise<
   };
 }
 
+// ── Angular ──────────────────────────────────────────────────────────────────
+
 async function scaffoldAngularProject(
   outputDir: string,
   typescript: boolean,
+  projectName?: string,
+  onStatus?: (msg: string) => void,
 ): Promise<ScaffoldResult> {
-  const projectName = path.basename(path.resolve(outputDir));
-  const parentDir = path.dirname(path.resolve(outputDir));
+  const resolvedOutput = path.resolve(outputDir);
+  const parentDir = path.dirname(resolvedOutput);
+  const dirName = path.basename(resolvedOutput);
 
-  // ng new genera la carpeta del proyecto automáticamente
+  // Use the provided name, falling back to the directory name
+  const name = (projectName ?? dirName).trim() || "my-angular-app";
+
+  // 1. Make sure Angular CLI is available (installs it globally if missing)
+  await ensureAngularCli(onStatus);
+
+  // 2. Run ng new — it creates the project folder, installs dependencies, etc.
+  onStatus?.(`Running ng new ${name}…`);
+
   const flags = [
-    `--directory=${path.basename(outputDir)}`,
+    `--directory=${dirName}`,
     "--routing=true",
     "--style=css",
     "--standalone=true",
-    `--skip-git=true`,
+    "--skip-git=true",
+    "--force", // overwrite conflicting files (e.g. .prettierrc)
     typescript ? "--strict=true" : "--strict=false",
     "--skip-install=false",
   ].join(" ");
 
-  await execAsync(`npx @angular/cli@latest new ${projectName} ${flags}`, {
-    cwd: parentDir,
-  });
+  // Limpiar el directorio destino antes de ng new para evitar conflictos
+  const targetDir = path.join(parentDir, dirName);
+  if (await fs.pathExists(targetDir)) {
+    await fs.emptyDir(targetDir);
+  }
 
-  // Listar los archivos generados por ng new
+  await execAsync(`ng new ${name} ${flags}`, { cwd: parentDir });
+
+  // 3. Collect all generated files for the summary (excludes node_modules)
   const allFiles: string[] = [];
-  async function walk(dir: string) {
+
+  async function walk(dir: string): Promise<void> {
     const entries = await fs.readdir(dir, { withFileTypes: true });
     for (const entry of entries) {
       const full = path.join(dir, entry.name);
@@ -77,13 +102,16 @@ async function scaffoldAngularProject(
       }
     }
   }
-  await walk(path.resolve(outputDir));
+
+  await walk(resolvedOutput);
 
   return {
     files: allFiles,
-    outputDir: path.resolve(outputDir),
+    outputDir: resolvedOutput,
   };
 }
+
+// ── Non-Angular scaffolding helpers ──────────────────────────────────────────
 
 function getProjectTemplates(
   framework: Framework,
@@ -288,7 +316,6 @@ export default defineConfig({
 }
 
 function generateIndexHtml(framework: Framework): string {
-  const rootId = "root";
   const scriptSrc =
     framework.id === "react"
       ? `src/main.tsx`
@@ -306,7 +333,7 @@ function generateIndexHtml(framework: Framework): string {
     <title>My App</title>
   </head>
   <body>
-    <div id="${rootId}"></div>
+    <div id="root"></div>
     <script type="module" src="/${scriptSrc}"></script>
   </body>
 </html>
@@ -343,7 +370,6 @@ const app = new App({
 export default app;
 `;
   }
-  // Angular — ng new genera su propio main.ts, este es fallback
   return ``;
 }
 
@@ -366,6 +392,5 @@ export default App;
     return `<h1>Welcome</h1>
 `;
   }
-  // Angular — ng new genera su propio app.component.ts
   return ``;
 }
