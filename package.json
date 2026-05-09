@@ -1,6 +1,6 @@
 {
   "name": "framearch",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "CLI to scaffold frontend features with your choice of framework and architecture",
   "type": "module",
   "bin": {
