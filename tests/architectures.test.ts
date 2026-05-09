@@ -119,26 +119,23 @@ describe("mvvmArchitecture — all frameworks", () => {
         outputDir: "/tmp/test",
       });
 
-      // For Angular, presentation and infrastructure/api layers are scaffolded
-      // via angularNgSteps() (ng generate), not generate(). Test them separately.
-      if (framework.id === "angular") {
-        const paths = templates.map((t) => t.path);
-        expect(paths.some((p) => p.includes("/domain/"))).toBe(true);
-        expect(paths.some((p) => p.includes("/infrastructure/"))).toBe(true);
-        // presentation is handled by angularNgSteps — verify steps exist instead
-        const steps = mvvmArchitecture.angularNgSteps!({
-          featureName: "auth",
-          framework,
-          outputDir: "/tmp/test",
-        });
-        expect(steps.some((s) => s.tsPath.includes("/presentation/"))).toBe(true);
-        return;
-      }
-
       const paths = templates.map((t) => t.path);
       expect(paths.some((p) => p.includes("/domain/"))).toBe(true);
       expect(paths.some((p) => p.includes("/infrastructure/"))).toBe(true);
       expect(paths.some((p) => p.includes("/presentation/"))).toBe(true);
+    });
+
+    it(`${framework.name}: domain layer has models, repositories, and errors`, () => {
+      const templates = mvvmArchitecture.generate({
+        featureName: "auth",
+        framework,
+        outputDir: "/tmp/test",
+      });
+
+      const paths = templates.map((t) => t.path);
+      expect(paths.some((p) => p.includes("/domain/models/"))).toBe(true);
+      expect(paths.some((p) => p.includes("/domain/repositories/"))).toBe(true);
+      expect(paths.some((p) => p.includes("/domain/errors/"))).toBe(true);
     });
 
     it(`${framework.name}: infrastructure layer has api, repositories, and dtos`, () => {
@@ -148,64 +145,12 @@ describe("mvvmArchitecture — all frameworks", () => {
         outputDir: "/tmp/test",
       });
 
-      // For Angular, api and repositories come from angularNgSteps(), not generate().
-      if (framework.id === "angular") {
-        const paths = templates.map((t) => t.path);
-        expect(paths.some((p) => p.includes("/infrastructure/dtos/"))).toBe(true);
-        const steps = mvvmArchitecture.angularNgSteps!({
-          featureName: "auth",
-          framework,
-          outputDir: "/tmp/test",
-        });
-        expect(steps.some((s) => s.tsPath.includes("/infrastructure/api/"))).toBe(true);
-        expect(steps.some((s) => s.tsPath.includes("/infrastructure/repositories/"))).toBe(true);
-        return;
-      }
-
       const paths = templates.map((t) => t.path);
       expect(paths.some((p) => p.includes("/infrastructure/api/"))).toBe(true);
       expect(paths.some((p) => p.includes("/infrastructure/repositories/"))).toBe(true);
       expect(paths.some((p) => p.includes("/infrastructure/dtos/"))).toBe(true);
     });
   }
-});
-
-describe("mvvmArchitecture — Angular ng steps", () => {
-  const angularFramework = FRAMEWORKS.find((f) => f.id === "angular")!;
-
-  it("angularNgSteps is defined", () => {
-    expect(typeof mvvmArchitecture.angularNgSteps).toBe("function");
-  });
-
-  it("returns steps for api, repositories, view-model, and components", () => {
-    const steps = mvvmArchitecture.angularNgSteps!({
-      featureName: "auth",
-      framework: angularFramework,
-      outputDir: "/tmp/test",
-    });
-
-    expect(steps.some((s) => s.tsPath.includes("/infrastructure/api/"))).toBe(true);
-    expect(steps.some((s) => s.tsPath.includes("/infrastructure/repositories/"))).toBe(true);
-    expect(steps.some((s) => s.tsPath.includes("/presentation/view-models/"))).toBe(true);
-    expect(steps.some((s) => s.tsPath.includes("/presentation/views/"))).toBe(true);
-  });
-
-  it("each step has ngGenerate, tsPath, and tsContent", () => {
-    const steps = mvvmArchitecture.angularNgSteps!({
-      featureName: "auth",
-      framework: angularFramework,
-      outputDir: "/tmp/test",
-    });
-
-    for (const step of steps) {
-      expect(typeof step.ngGenerate).toBe("string");
-      expect(step.ngGenerate.length).toBeGreaterThan(0);
-      expect(typeof step.tsPath).toBe("string");
-      expect(step.tsPath.length).toBeGreaterThan(0);
-      expect(typeof step.tsContent).toBe("string");
-      expect(step.tsContent.length).toBeGreaterThan(0);
-    }
-  });
 });
 
 describe("WIP architectures", () => {
