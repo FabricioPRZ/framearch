@@ -37,34 +37,7 @@ jobs:
       - name: Build
         run: npm run build
 
-      # 🔥 Obtener versión desde el tag
-      - name: Extract version
-        id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
-      # 🔄 Sincronizar versión solo si es diferente
-      - name: Sync version with package.json
-        run: |
-          CURRENT=$(node -p "require('./package.json').version")
-          if [ "${{ steps.version.outputs.VERSION }}" != "$CURRENT" ]; then
-            npm version ${{ steps.version.outputs.VERSION }} --no-git-tag-version
-          else
-            echo "Version already matches"
-          fi
-
-      # 🔍 Verificar si ya existe en npm
-      - name: Check if version exists
-        id: check
-        run: |
-          if npm view framearch@${{ steps.version.outputs.VERSION }} version; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
-
-      # 🚀 Publicar solo si no existe
       - name: Publish to npm
-        if: steps.check.outputs.exists == 'false'
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
